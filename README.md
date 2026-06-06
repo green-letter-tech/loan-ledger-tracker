@@ -37,7 +37,8 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 4** — loan calculator + INR formatters (9 unit tests; see `packages/core/README.md`)
   - ✅ **Task 5** — design tokens + ThemeProvider
   - ✅ **Task 6** — UI primitives (Card, PillButton, Avatar, … — see `apps/mobile/src/components/ui/`)
-  - ⏳ **Task 7** — SQLite schema & migrations (next)
+  - ✅ **Task 7** — SQLite schema & migrations (`apps/mobile/src/data/db/`)
+  - ⏳ **Task 8** — LoanRepository + LocalLoanRepository (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.

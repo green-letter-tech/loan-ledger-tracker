@@ -28,9 +28,10 @@
 | **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit `a964ffa`. |
 | **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit `ef9ec82`. |
 | **5. Port design tokens** | **Done** (2026-06-06) | `ThemeProvider`, `useTheme`, theme preview screen. Local commit `0c660c5`. |
-| **6. UI primitives** | **Done** (2026-06-06) | Card, PillButton, Avatar, StatusPill, ProgressBar, Logo + `DevPreviewScreen`. Local commit pending. |
-| 7. SQLite schema | Pending | Next |
-| 8–24 | Pending | See phases below |
+| **6. UI primitives** | **Done** (2026-06-06) | Card, PillButton, Avatar, StatusPill, ProgressBar, Logo + `DevPreviewScreen`. Local commit `355cb91`. |
+| **7. SQLite schema** | **Done** (2026-06-06) | v1 tables, migrations, owner seed. Local commit pending. |
+| 8. Repository | Pending | Next |
+| 9–24 | Pending | See phases below |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
@@ -465,14 +466,17 @@ Port behavior from `Lend Ledger/app/lib.jsx` — match variants: `primary`, `out
 
 ## Phase 4 — SQLite & repository
 
-### Task 7: Database schema & migrations ← **Next**
+### Task 7: Database schema & migrations ✅ Done
 
 **Files:**
 - Create: `apps/mobile/src/data/db/schema.ts`
 - Create: `apps/mobile/src/data/db/migrations.ts`
 - Create: `apps/mobile/src/data/db/client.ts`
+- Create: `apps/mobile/src/data/db/uuid.ts`
+- Create: `apps/mobile/src/data/db/README.md`
+- Modify: `apps/mobile/App.tsx`, `DevPreviewScreen.tsx`
 
-- [ ] **Step 1: Define schema matching spec §10**
+- [x] **Step 1: Define schema matching spec §10**
 
 Tables: `owners`, `owner_settings`, `loanees`, `loans`, `daily_entries`.
 
@@ -508,12 +512,25 @@ CREATE TABLE daily_entries (
 );
 ```
 
-- [ ] **Step 2: Seed single owner + default settings on first launch**
-- [ ] **Step 3: Commit**
+- [x] **Step 2: Seed single owner + default settings on first launch**
+
+`seedDefaultOwner()` — theme `system`, reminders on, 7:00 PM default, `onboarded = 0`.
+
+- [x] **Step 3: Verify** — `npm run mobile:web` → DevPreview shows `Database: ready`.
+
+- [x] **Step 4: Commit** — local only; not pushed to GitHub.
+
+**Implementation notes (Task 7):**
+
+- `PRAGMA user_version` migrations; `foreign_keys` enabled.
+- Indexes on `loanees.owner_id`, `loans` FKs, `daily_entries.loan_id`.
+- `initializeDatabase()` called from `App.tsx`; idempotent singleton.
+- Task 8 will use `listEntryDates()` from `@lendledger/core` when inserting `daily_entries`.
+- Docs: `apps/mobile/src/data/db/README.md`.
 
 ---
 
-### Task 8: Repository interface & local implementation
+### Task 8: Repository interface & local implementation ← **Next**
 
 **Files:**
 - Create: `packages/core/src/repository-types.ts` (interfaces only)

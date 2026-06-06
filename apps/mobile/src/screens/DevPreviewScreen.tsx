@@ -1,5 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import { initializeDatabase } from '../data/db/client';
 
 import {
   Avatar,
@@ -18,6 +21,13 @@ const STATUSES: LoanStatusLabel[] = ['Paid', 'Unpaid', 'Partial', 'Active', 'Clo
 
 export function DevPreviewScreen() {
   const { themePreference, resolvedTheme, tokens, setThemePreference } = useTheme();
+  const [dbStatus, setDbStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    initializeDatabase()
+      .then(() => setDbStatus('ready'))
+      .catch(() => setDbStatus('error'));
+  }, []);
 
   return (
     <ScrollView
@@ -31,7 +41,10 @@ export function DevPreviewScreen() {
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: tokens.text }]}>LendLedger dev preview</Text>
           <Text style={[styles.subtitle, { color: tokens.textSoft }]}>
-            Tasks 5–6 — theme + UI primitives
+            Tasks 5–7 — theme, UI primitives, SQLite v1
+          </Text>
+          <Text style={[styles.meta, { color: tokens.textFaint }]}>
+            Database: {dbStatus === 'loading' ? '…' : dbStatus === 'ready' ? 'ready' : 'error'}
           </Text>
         </View>
         <Avatar initials="RK" hue={254} />
@@ -103,6 +116,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 4 },
   title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
   subtitle: { fontSize: 14, lineHeight: 20, marginTop: 2 },
+  meta: { fontSize: 12, marginTop: 4 },
   label: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   wrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
