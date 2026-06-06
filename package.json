@@ -1,0 +1,12 @@
+{
+  "name": "lend-ledger",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "mobile": "npm run start --workspace=@lendledger/mobile",
+    "mobile:web": "npm run web --workspace=@lendledger/mobile",
+    "mobile:android": "npm run android --workspace=@lendledger/mobile",
+    "test:core": "npm run test --workspace=@lendledger/core",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
