@@ -1,10 +1,10 @@
 import { ThemeProvider } from './src/theme/ThemeProvider';
-import { ThemePreviewScreen } from './src/screens/ThemePreviewScreen';
+import { DevPreviewScreen } from './src/screens/DevPreviewScreen';
 
 export default function App() {
   return (
     <ThemeProvider initialPreference="system">
-      <ThemePreviewScreen />
+      <DevPreviewScreen />
     </ThemeProvider>
   );
 }

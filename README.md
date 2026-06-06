@@ -35,8 +35,9 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 2** — Expo app scaffold (`apps/mobile`, `npm run mobile:web`)
   - ✅ **Task 3** — `packages/core` setup (`npm run test:core`)
   - ✅ **Task 4** — loan calculator + INR formatters (9 unit tests; see `packages/core/README.md`)
-  - ✅ **Task 5** — design tokens + ThemeProvider (`npm run mobile:web` → theme preview)
-  - ⏳ **Task 6** — UI primitives (Card, PillButton, …) (next)
+  - ✅ **Task 5** — design tokens + ThemeProvider
+  - ✅ **Task 6** — UI primitives (Card, PillButton, Avatar, … — see `apps/mobile/src/components/ui/`)
+  - ⏳ **Task 7** — SQLite schema & migrations (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
@@ -52,7 +53,7 @@ npm run test:core    # 18 unit tests (calculator, dates, format)
 ### Mobile theme preview
 
 ```bash
-npm run mobile:web   # press w — theme toggle + brand swatches (Task 5+)
+npm run mobile:web   # press w — DevPreviewScreen (theme + UI primitives)
 ```
 
-See `apps/mobile/src/theme/README.md`. Full app screens land from Task 9 onward; calculator UI in Task 12.
+See `apps/mobile/src/theme/README.md` and `apps/mobile/src/components/ui/README.md`. Full app screens land from Task 9 onward; calculator UI in Task 12.

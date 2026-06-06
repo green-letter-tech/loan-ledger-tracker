@@ -27,9 +27,10 @@
 | **2. Expo app scaffold** | **Done** (2026-06-06) | `apps/mobile` (Expo SDK 56, `@lendledger/mobile`), deps installed (no `@lendledger/core` yet), `app.json` configured, LL icons. `npm run mobile:web` OK. Local commit `bb4f0a1`. |
 | **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit `a964ffa`. |
 | **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit `ef9ec82`. |
-| **5. Port design tokens** | **Done** (2026-06-06) | `ThemeProvider`, `useTheme`, theme preview screen. Local commit pending. |
-| 6. UI primitives | Pending | Next |
-| 7–24 | Pending | See phases below |
+| **5. Port design tokens** | **Done** (2026-06-06) | `ThemeProvider`, `useTheme`, theme preview screen. Local commit `0c660c5`. |
+| **6. UI primitives** | **Done** (2026-06-06) | Card, PillButton, Avatar, StatusPill, ProgressBar, Logo + `DevPreviewScreen`. Local commit pending. |
+| 7. SQLite schema | Pending | Next |
+| 8–24 | Pending | See phases below |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
@@ -413,7 +414,7 @@ Run: `npm run mobile:web` → theme preview with Light/Dark/System chips and bra
 | Task | What you can test in Expo (`npm run mobile:web`) |
 |------|--------------------------------------------------|
 | **5** ✅ | Theme preview — toggle light/dark/system, see brand colors |
-| **6** | UI primitives (Card, PillButton, etc.) on preview/dev screen |
+| **6** ✅ | UI primitives (Card, PillButton, etc.) on `DevPreviewScreen` |
 | **9** | Tab bar + placeholder screens (Home, Calculator, Loanees, Settings) |
 | **10–11** | Onboarding + Settings (theme persists) |
 | **12** | **Calculator screen** — live ₹ outputs from `@lendledger/core` |
@@ -432,7 +433,7 @@ Canonical design reference remains `Lend Ledger/` HTML preview until Expo screen
 
 ---
 
-### Task 6: UI primitives ← **Next**
+### Task 6: UI primitives ✅ Done
 
 **Files:**
 - Create: `apps/mobile/src/components/ui/Card.tsx`
@@ -441,18 +442,30 @@ Canonical design reference remains `Lend Ledger/` HTML preview until Expo screen
 - Create: `apps/mobile/src/components/ui/StatusPill.tsx`
 - Create: `apps/mobile/src/components/ui/ProgressBar.tsx`
 - Create: `apps/mobile/src/components/ui/Logo.tsx`
+- Create: `apps/mobile/src/components/ui/index.ts`
+- Create: `apps/mobile/src/components/ui/README.md`
+- Create: `apps/mobile/src/screens/DevPreviewScreen.tsx`
+- Modify: `apps/mobile/App.tsx`
+- Add dep: `expo-linear-gradient`
 
 Port behavior from `Lend Ledger/app/lib.jsx` — match variants: `primary`, `outline`, `green`, `danger`.
 
-- [ ] **Step 1: Build each primitive with theme tokens (no hardcoded hex in screens)**
-- [ ] **Step 2: Storybook optional — skip for MVP1**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Build each primitive with theme tokens (no hardcoded hex in screens)**
+- [x] **Step 2: Storybook optional — skip for MVP1**
+- [x] **Step 3: Verify UI** — `npm run mobile:web` → `DevPreviewScreen`
+- [x] **Step 4: Commit** — local only; not pushed to GitHub.
+
+**Implementation notes (Task 6):**
+
+- Gradients via `expo-linear-gradient` using `tokens.gradPrimary` / `gradBlue` / `gradGreen`.
+- `DevPreviewScreen` replaces `ThemePreviewScreen` until Task 9 navigation.
+- Docs: `apps/mobile/src/components/ui/README.md`.
 
 ---
 
 ## Phase 4 — SQLite & repository
 
-### Task 7: Database schema & migrations
+### Task 7: Database schema & migrations ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/data/db/schema.ts`
