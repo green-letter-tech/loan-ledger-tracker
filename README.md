@@ -34,7 +34,16 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 1** — monorepo workspace root (`package.json`, `tsconfig.base.json`)
   - ✅ **Task 2** — Expo app scaffold (`apps/mobile`, `npm run mobile:web`)
   - ✅ **Task 3** — `packages/core` setup (`npm run test:core`)
-  - ⏳ **Task 4** — calculator + tests (next)
+  - ✅ **Task 4** — loan calculator + INR formatters (9 unit tests; see `packages/core/README.md`)
+  - ⏳ **Task 5** — port design tokens + ThemeProvider (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
+
+### Core package (`@lendledger/core`)
+
+Shared loan math and INR formatting — documented in `packages/core/README.md`.
+
+```bash
+npm run test:core    # run unit tests
+```

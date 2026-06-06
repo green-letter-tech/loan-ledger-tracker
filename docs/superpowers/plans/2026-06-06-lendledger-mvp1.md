@@ -25,9 +25,10 @@
 |------|--------|-------|
 | **1. Workspace root** | **Done** (2026-06-06) | `package.json`, `tsconfig.base.json`, `.gitignore`, `npm install` OK. Local commit `4bd7467` on `feature/UI_implementation`. |
 | **2. Expo app scaffold** | **Done** (2026-06-06) | `apps/mobile` (Expo SDK 56, `@lendledger/mobile`), deps installed (no `@lendledger/core` yet), `app.json` configured, LL icons. `npm run mobile:web` OK. Local commit `bb4f0a1`. |
-| **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit pending. |
-| 4. Calculator with tests | Pending | Next |
-| 5–24 | Pending | See phases below |
+| **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit `a964ffa`. |
+| **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit pending. |
+| 5. Port design tokens | Pending | Next |
+| 6–24 | Pending | See phases below |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
@@ -235,7 +236,7 @@ Expected: no tests yet, vitest exits 0 (`passWithNoTests: true` in vitest config
 
 ---
 
-### Task 4: Calculator with tests (TDD) ← **Next**
+### Task 4: Calculator with tests (TDD) ✅ Done
 
 **Files:**
 - Create: `packages/core/src/types.ts`
@@ -243,9 +244,11 @@ Expected: no tests yet, vitest exits 0 (`passWithNoTests: true` in vitest config
 - Create: `packages/core/src/calculator.ts`
 - Create: `packages/core/src/format.ts`
 - Create: `packages/core/__tests__/calculator.test.ts`
+- Create: `packages/core/__tests__/format.test.ts`
 - Create: `packages/core/src/index.ts`
+- Create: `packages/core/README.md`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```typescript
 // packages/core/__tests__/calculator.test.ts
@@ -281,12 +284,12 @@ describe('calculateLoan', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests — expect FAIL**
+- [x] **Step 2: Run tests — expect FAIL**
 
 Run: `npm run test:core`  
-Expected: `calculateLoan is not defined` or module not found
+Expected: module not found (confirmed before implementation).
 
-- [ ] **Step 3: Implement `calculator.ts`**
+- [x] **Step 3: Implement `calculator.ts`**
 
 ```typescript
 // packages/core/src/calculator.ts
@@ -314,27 +317,35 @@ export function calculateLoan(input: LoanCalculationInput): LoanCalculationResul
 
 Implement `dates.ts` per spec §7 (`day` = rate as-is; `month` = rate/30; `year` = rate/365).
 
-- [ ] **Step 4: Implement `format.ts`**
+- [x] **Step 4: Implement `format.ts`**
 
-Port `groupINR` / `formatINR` from `Lend Ledger/app/lib.jsx` (Indian lakh grouping).
+Ported `groupINR` / `formatINR` from `Lend Ledger/app/lib.jsx` (Indian lakh grouping).
 
-- [ ] **Step 5: Run tests — expect PASS**
+- [x] **Step 5: Run tests — expect PASS**
 
-Run: `npm run test:core`  
-Expected: all green
+Run: `npm run test:core` — **9 tests passed** (5 calculator + 4 format).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** — local only; not pushed to GitHub.
 
 ```bash
-git add packages/core
+git add packages/core docs/superpowers/plans README.md
 git commit -m "feat(core): add loan calculator with unit tests"
 ```
+
+**Implementation notes (Task 4):**
+
+- **Source of truth for math:** `docs/superpowers/specs/2026-05-25-lendledger-design.md` §7; verified against `Lend Ledger/app/screens-core.jsx` calculator logic.
+- **`dates.ts`:** `day` → rate% as-is; `month` → rate÷30; `year` → rate÷365; then ÷100 for decimal. Duration: months×30, years×365.
+- **`calculator.ts`:** Flat interest; amounts rounded to 2 dp; `dailyExpected` is 0 when `durationDays` is 0.
+- **`format.ts`:** Lakh grouping (`1,50,000`); optional paise display for calculator outputs.
+- **Package docs:** `packages/core/README.md` — formula, scripts, how to extend with TDD.
+- **Mobile wiring:** `@lendledger/core` not yet added to `apps/mobile` — happens when Calculator screen is built (Task 11+).
 
 ---
 
 ## Phase 3 — Theme & UI primitives
 
-### Task 5: Port design tokens
+### Task 5: Port design tokens ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/theme/tokens.ts`
