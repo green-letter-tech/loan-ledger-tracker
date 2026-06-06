@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LendLedger — App Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app/tokens.css" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0c0d10; }
+  #root { height: 100vh; }
+  .ll-stage {
+    height: 100vh; width: 100%;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, oklch(0.32 0.06 250 / 0.5), transparent 60%),
+      radial-gradient(1000px 600px at 100% 110%, oklch(0.32 0.06 160 / 0.4), transparent 60%),
+      #0c0d10;
+    overflow: hidden;
+  }
+  .ll-chrome {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 13px 20px; flex-shrink: 0; flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .ll-chrome-title { display: flex; align-items: center; gap: 11px; color: #fff; }
+  .ll-seg { display: flex; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 11px; padding: 3px; gap: 2px; }
+  .ll-seg button { border: none; background: transparent; color: rgba(255,255,255,0.62);
+    font-size: 13px; font-weight: 650; padding: 7px 15px; border-radius: 8px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; transition: all .15s; font-family: inherit; }
+  .ll-seg button.on { background: #fff; color: #16181d; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .ll-chrome, .ll-chrome * { font-family: "DM Sans", system-ui, sans-serif; }
+  .ll-viewport { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="file-protocol-warning" style="display:none;position:fixed;inset:0;z-index:999999;background:#0c0d10;color:#fff;place-items:center;padding:32px;font:16px/1.5 ui-sans-serif,system-ui,sans-serif;text-align:center">
+  <div style="max-width:520px">
+    <h1 style="margin:0 0 12px;font-size:22px">Open via local server</h1>
+    <p style="margin:0 0 16px;color:rgba(255,255,255,.75)">
+      This preview loads React components from <code style="color:#93c5fd">app/*.jsx</code>.
+      Browsers block that when the file is opened directly (<code style="color:#93c5fd">file://</code>).
+    </p>
+    <p style="margin:0 0 16px"><a href="http://localhost:8765/LendLedger.html" style="color:#93c5fd;font-weight:700">Open http://localhost:8765/LendLedger.html</a></p>
+    <pre style="text-align:left;background:#16181d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;overflow:auto;color:#e2e8f0;font-size:13px">cd "Lend Ledger"
+./start-preview.sh
+# then open http://localhost:8765/LendLedger.html</pre>
+  </div>
+</div>
+<div id="root"></div>
+<script>
+  (function () {
+    var el = document.getElementById("file-protocol-warning");
+    if (location.protocol === "file:") {
+      el.style.display = "grid";
+    }
+  })();
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="22" fill="#2563eb"/>
+    <text x="50" y="64" font-family="system-ui, sans-serif" font-size="42" font-weight="800"
+      fill="#fff" text-anchor="middle" letter-spacing="-2">LL</text>
+  </svg>
+</template>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script>
+  window.addEventListener("error", function (e) {
+    var root = document.getElementById("root");
+    if (!root || root.childNodes.length) return;
+    root.innerHTML = '<div style="padding:24px;font:14px/1.5 ui-sans-serif,sans-serif;color:#fecaca;background:#1a0f0f;border:1px solid #7f1d1d;border-radius:12px;margin:16px">'
+      + '<strong>Preview failed to load.</strong><br>'
+      + (e.message || "Unknown error")
+      + '<br><br>If Brave Shields blocked scripts, allow <code>unpkg.com</code> for this page or use localhost with shields down.</div>';
+  });
+</script>
+
+<script type="text/babel" src="app/lib.jsx"></script>
+<script type="text/babel" src="app/tweaks-panel.jsx"></script>
+<script type="text/babel" src="app/screens-core.jsx"></script>
+<script type="text/babel" src="app/screens-core2.jsx"></script>
+<script type="text/babel" src="app/screens-stack.jsx"></script>
+<script type="text/babel" src="app/screens-stack2.jsx"></script>
+<script type="text/babel" src="app/desktop.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ---------- theme variable builder (accent / radius / font / gradients) ---------- */
+const ACCENTS = {
+  "Classic": [252, 158], "Indigo": [272, 198], "Ocean": [232, 182], "Violet": [302, 196],
+};
+function buildVars(theme, t) {
+  const dark = theme === "dark";
+  const [bh, gh] = ACCENTS[t.accent] || ACCENTS.Classic;
+  const blueL = dark ? 0.66 : 0.58, greenL = dark ? 0.70 : 0.64;
+  const v = {
+    "--blue": `oklch(${blueL} 0.15 ${bh})`,
+    "--green": `oklch(${greenL} 0.14 ${gh})`,
+    "--blue-tint": dark ? `oklch(0.30 0.05 ${bh})` : `oklch(0.95 0.03 ${bh})`,
+    "--green-tint": dark ? `oklch(0.30 0.05 ${gh})` : `oklch(0.95 0.04 ${gh})`,
+    "--grad-primary": `linear-gradient(135deg, oklch(${dark?0.55:0.60} 0.15 ${bh}), oklch(${dark?0.56:0.64} 0.14 ${gh}))`,
+    "--grad-blue": `linear-gradient(135deg, oklch(${blueL} 0.15 ${bh}), oklch(${blueL-0.06} 0.16 ${bh-6}))`,
+    "--grad-green": `linear-gradient(135deg, oklch(${greenL} 0.13 ${gh}), oklch(${greenL-0.07} 0.15 ${gh-6}))`,
+    "--header-grad": `linear-gradient(150deg, oklch(${dark?0.40:0.62} 0.13 ${bh}), oklch(${dark?0.36:0.60} 0.10 ${Math.round((bh+gh)/2)}) 55%, oklch(${dark?0.40:0.64} 0.12 ${gh}))`,
+    "--radius-card": t.radius + "px",
+    "--radius-lg": (t.radius + 4) + "px",
+  };
+  v["--card-grad-blue"] = t.cardGradients
+    ? (dark ? `linear-gradient(160deg, oklch(0.27 0.05 ${bh}), oklch(0.22 0.02 256))` : `linear-gradient(160deg, oklch(0.97 0.03 ${bh}), oklch(0.995 0.008 ${bh}))`)
+    : "var(--surface)";
+  v["--card-grad-green"] = t.cardGradients
+    ? (dark ? `linear-gradient(160deg, oklch(0.27 0.05 ${gh}), oklch(0.22 0.02 256))` : `linear-gradient(160deg, oklch(0.97 0.04 ${gh}), oklch(0.995 0.008 ${gh}))`)
+    : "var(--surface)";
+  if (t.font !== "System") v["--font-override"] = t.font === "Plus Jakarta Sans"
+    ? '"Plus Jakarta Sans", sans-serif' : '"DM Sans", sans-serif';
+  return v;
+}
+
+/* ---------- status bar ---------- */
+function StatusBar({ theme }) {
+  const c = theme === "dark" ? "#fff" : "#16181d";
+  return (
+    <div style={{ height: 44, display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 26px", flexShrink: 0, color: c, fontWeight: 700, fontSize: 14.5, position: "relative", zIndex: 4 }}>
+      <span style={{ letterSpacing: "-0.02em" }}>9:41</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <svg width="17" height="12" viewBox="0 0 17 12" fill={c}><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke={c} strokeWidth="1.4"><path d="M8 10.5h.01M2 5a9 9 0 0 1 12 0M4.5 7.5a5.5 5.5 0 0 1 7 0" strokeLinecap="round"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke={c} strokeOpacity="0.5"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill={c}/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill={c} fillOpacity="0.5"/></svg>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- bottom tab bar ---------- */
+function TabBar({ tab, onTab }) {
+  const tabs = [
+    { id: "home", icon: "home", label: "Home" },
+    { id: "calc", icon: "calc", label: "Calculator" },
+    { id: "loanees", icon: "people", label: "Loanees" },
+    { id: "settings", icon: "settings", label: "Settings" },
+  ];
+  return (
+    <div style={{ flexShrink: 0, background: "var(--bg-elev)", borderTop: "1px solid var(--border)",
+      paddingBottom: "calc(env(safe-area-inset-bottom) + 6px)", display: "flex", position: "relative", zIndex: 6 }}>
+      {tabs.map(tb => {
+        const active = tab === tb.id;
+        return (
+          <button key={tb.id} onClick={() => onTab(tb.id)} style={{
+            flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 0 4px",
+            background: "none", border: "none", cursor: "pointer", color: active ? "var(--blue)" : "var(--text-faint)",
+            transition: "color .15s" }}>
+            <Icon name={tb.icon} size={23} stroke={active ? 2.2 : 1.9} />
+            <span style={{ fontSize: 10.5, fontWeight: active ? 750 : 600 }}>{tb.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- mobile app shell ---------- */
+const TAB_COMP = { home: Dashboard, calc: Calculator, loanees: Loanees, settings: Settings };
+const STACK_COMP = { onboarding: Onboarding, loanDetail: LoanDetail, createLoan: CreateLoan,
+  extendLoan: ExtendLoan, loaneeForm: LoaneeForm, loaneeDetail: LoaneeDetail };
+
+function MobileApp({ theme, setTheme, tweaks, vars }) {
+  const [tab, setTab] = useState("home");
+  const [stack, setStack] = useState([]);
+  const scrollRef = useRef(null);
+  const onboarded = tweaks.launch !== "onboarding";
+  const [dismissOnb, setDismissOnb] = useState(false);
+
+  const nav = {
+    push: (screen, params = {}) => setStack(s => [...s, { screen, params }]),
+    pop: () => setStack(s => s.slice(0, -1)),
+    setTab: (t) => { setStack([]); setTab(t); },
+    finishOnboarding: () => setDismissOnb(true),
+  };
+  const ctx = { nav, theme, setTheme, tweaks };
+  if (!window.__mbCalc) window.__mbCalc = {};
+  ctx._calc = window.__mbCalc;
+
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [tab, stack.length]);
+
+  const showOnboarding = !onboarded && !dismissOnb && stack.length === 0;
+  const top = stack[stack.length - 1];
+  const StackComp = top ? STACK_COMP[top.screen] : null;
+  const TabComp = TAB_COMP[tab];
+
+  return (
+    <div data-theme={theme} className="ll-app" style={{ ...vars, height: "100%", width: "100%",
+      display: "flex", flexDirection: "column", background: "var(--bg)", color: "var(--text)",
+      borderRadius: 46, overflow: "hidden", position: "relative" }}>
+      {/* notch */}
+      <div style={{ position: "absolute", top: 11, left: "50%", transform: "translateX(-50%)", width: 122, height: 31,
+        background: "#000", borderRadius: 99, zIndex: 20 }} />
+      <StatusBar theme={theme} />
+
+      <div ref={scrollRef} className="ll-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
+        {showOnboarding ? <Onboarding ctx={ctx} />
+          : StackComp ? <StackComp ctx={ctx} params={top.params} />
+          : <div style={{ paddingTop: 6 }}><TabComp ctx={ctx} /></div>}
+      </div>
+
+      {!showOnboarding && stack.length === 0 && <TabBar tab={tab} onTab={nav.setTab} />}
+    </div>
+  );
+}
+
+/* ---------- phone frame with scaling ---------- */
+function PhoneFrame({ children }) {
+  const wrapRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = wrapRef.current; if (!el) return;
+    const fit = () => {
+      const r = el.getBoundingClientRect();
+      const s = Math.min((r.width - 24) / 390, (r.height - 24) / 844, 1.15);
+      setScale(Math.max(0.4, s));
+    };
+    fit();
+    const ro = new ResizeObserver(fit); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+      <div style={{ width: 390, height: 844, transform: `scale(${scale})`, transformOrigin: "center",
+        borderRadius: 54, background: "#000", padding: 11, boxShadow: "0 50px 100px -20px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,0.06)" }}>
+        <div style={{ width: "100%", height: "100%", borderRadius: 46, overflow: "hidden" }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- desktop frame ---------- */
+function DesktopFrame({ children }) {
+  const wrapRef = useRef(null);
+  const [dims, setDims] = useState({ w: 1280, h: 800, scale: 1 });
+  useEffect(() => {
+    const el = wrapRef.current; if (!el) return;
+    const fit = () => {
+      const r = el.getBoundingClientRect();
+      const W = 1280, H = Math.max(780, Math.min(880, r.height - 40));
+      const s = Math.min((r.width - 40) / W, (r.height - 40) / H, 1);
+      setDims({ w: W, h: H, scale: Math.max(0.35, s) });
+    };
+    fit();
+    const ro = new ResizeObserver(fit); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+      <div style={{ width: dims.w, height: dims.h, transform: `scale(${dims.scale})`, transformOrigin: "center",
+        borderRadius: 16, overflow: "hidden", background: "#000",
+        boxShadow: "0 40px 90px -25px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,0.07)", display: "flex", flexDirection: "column" }}>
+        {/* window chrome */}
+        <div style={{ height: 38, background: "#1b1d22", display: "flex", alignItems: "center", padding: "0 15px", gap: 8, flexShrink: 0 }}>
+          <span style={{ width: 12, height: 12, borderRadius: 99, background: "#ff5f57" }} />
+          <span style={{ width: 12, height: 12, borderRadius: 99, background: "#febc2e" }} />
+          <span style={{ width: 12, height: 12, borderRadius: 99, background: "#28c840" }} />
+          <div style={{ flex: 1, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 12.5, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>lendledger.app</div>
+          <div style={{ width: 52 }} />
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- root ---------- */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "Violet",
+  "font": "Plus Jakarta Sans",
+  "radius": 21,
+  "cardGradients": true,
+  "dataset": "populated",
+  "launch": "app"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [device, setDevice] = useState("phone");
+  const [theme, setTheme] = useState("light");
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const vars = buildVars(theme, t);
+
+  return (
+    <div className="ll-stage">
+      <div className="ll-chrome">
+        <div className="ll-chrome-title">
+          <Logo size={30} radius={9} />
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.02em" }}>LendLedger</div>
+            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>App design · Expo RN handoff</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div className="ll-seg">
+            <button className={device === "phone" ? "on" : ""} onClick={() => setDevice("phone")}><Icon name="phone" size={15} /> Mobile</button>
+            <button className={device === "desktop" ? "on" : ""} onClick={() => setDevice("desktop")}><Icon name="grid" size={15} /> Desktop</button>
+          </div>
+          <div className="ll-seg">
+            <button className={theme === "light" ? "on" : ""} onClick={() => setTheme("light")}><Icon name="sun" size={15} /> Light</button>
+            <button className={theme === "dark" ? "on" : ""} onClick={() => setTheme("dark")}><Icon name="moon" size={15} /> Dark</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="ll-viewport">
+        {device === "phone"
+          ? <PhoneFrame><MobileApp theme={theme} setTheme={setTheme} tweaks={t} vars={vars} /></PhoneFrame>
+          : <DesktopFrame><div style={{ ...vars, height: "100%" }}><DesktopApp theme={theme} setTheme={setTheme} tweaks={t} /></div></DesktopFrame>}
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Brand" />
+        <TweakRadio label="Accent" value={t.accent} options={["Classic","Indigo","Ocean","Violet"]} onChange={v => setTweak("accent", v)} />
+        <TweakSelect label="Font" value={t.font} options={["System","Plus Jakarta Sans","DM Sans"]} onChange={v => setTweak("font", v)} />
+        <TweakSection label="Cards" />
+        <TweakSlider label="Corner radius" value={t.radius} min={8} max={26} unit="px" onChange={v => setTweak("radius", v)} />
+        <TweakToggle label="Gradient cards" value={t.cardGradients} onChange={v => setTweak("cardGradients", v)} />
+        <TweakSection label="Preview state" />
+        <TweakRadio label="Sample data" value={t.dataset} options={["populated","empty"]} onChange={v => setTweak("dataset", v)} />
+        <TweakRadio label="Launch" value={t.launch} options={["app","onboarding"]} onChange={v => setTweak("launch", v)} />
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

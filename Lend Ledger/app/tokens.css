@@ -1,0 +1,120 @@
+/* ============================================================
+   LendLedger — design tokens
+   Black / White / Blue / Green fintech-lite system.
+   Two themes via [data-theme="light|dark"] on the app root.
+   ============================================================ */
+
+:root {
+  /* brand hues (oklch — accents share chroma/lightness, vary hue) */
+  --blue:        oklch(0.58 0.15 252);
+  --blue-strong: oklch(0.52 0.16 256);
+  --green:       oklch(0.64 0.14 158);
+  --green-strong:oklch(0.57 0.15 160);
+  --amber:       oklch(0.74 0.14 72);
+  --red:         oklch(0.60 0.18 25);
+
+  --grad-primary: linear-gradient(135deg, oklch(0.60 0.15 254), oklch(0.64 0.14 168));
+  --grad-blue:    linear-gradient(135deg, oklch(0.60 0.15 254), oklch(0.55 0.16 248));
+  --grad-green:   linear-gradient(135deg, oklch(0.66 0.13 165), oklch(0.58 0.15 155));
+
+  --radius-card: 18px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --radius-input: 14px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* font — system default sans (matches RN); overridable via --app-font */
+  --app-font: var(--font-override, -apple-system, BlinkMacSystemFont, "Segoe UI",
+              Roboto, "Helvetica Neue", system-ui, sans-serif);
+}
+
+/* ---------------- LIGHT ---------------- */
+[data-theme="light"] {
+  --bg:          oklch(0.975 0.004 250);
+  --bg-elev:     oklch(0.99 0.003 250);
+  --surface:     oklch(1 0 0);
+  --surface-2:   oklch(0.965 0.005 250);
+  --surface-sunken: oklch(0.945 0.006 250);
+
+  --text:        oklch(0.24 0.02 256);
+  --text-soft:   oklch(0.46 0.02 256);
+  --text-faint:  oklch(0.62 0.015 256);
+
+  --border:      oklch(0.91 0.006 256);
+  --border-soft: oklch(0.94 0.005 256);
+
+  --blue-tint:   oklch(0.95 0.03 252);
+  --green-tint:  oklch(0.95 0.04 162);
+  --amber-tint:  oklch(0.95 0.05 78);
+  --red-tint:    oklch(0.95 0.04 25);
+
+  --card-grad-blue:  linear-gradient(160deg, oklch(0.97 0.03 254), oklch(0.99 0.01 254));
+  --card-grad-green: linear-gradient(160deg, oklch(0.97 0.04 165), oklch(0.99 0.01 165));
+  --header-grad:     linear-gradient(150deg, oklch(0.62 0.15 254), oklch(0.60 0.13 196) 55%, oklch(0.64 0.13 168));
+
+  --shadow-sm: 0 1px 2px oklch(0.5 0.03 256 / 0.06), 0 1px 3px oklch(0.5 0.03 256 / 0.05);
+  --shadow:    0 2px 6px oklch(0.5 0.03 256 / 0.07), 0 8px 24px oklch(0.5 0.03 256 / 0.07);
+  --shadow-lg: 0 8px 20px oklch(0.45 0.03 256 / 0.12), 0 20px 48px oklch(0.45 0.03 256 / 0.12);
+  --on-grad: oklch(1 0 0);
+  --scrim: oklch(0.2 0.02 256 / 0.45);
+}
+
+/* ---------------- DARK ---------------- */
+[data-theme="dark"] {
+  --bg:          oklch(0.16 0.006 260);
+  --bg-elev:     oklch(0.19 0.007 260);
+  --surface:     oklch(0.215 0.008 262);
+  --surface-2:   oklch(0.25 0.009 262);
+  --surface-sunken: oklch(0.185 0.007 262);
+
+  --text:        oklch(0.96 0.004 250);
+  --text-soft:   oklch(0.74 0.01 256);
+  --text-faint:  oklch(0.58 0.012 256);
+
+  --border:      oklch(0.30 0.01 262);
+  --border-soft: oklch(0.26 0.009 262);
+
+  --blue:        oklch(0.66 0.13 254);
+  --green:       oklch(0.70 0.12 162);
+  --amber:       oklch(0.78 0.12 75);
+  --red:         oklch(0.66 0.16 27);
+
+  --blue-tint:   oklch(0.30 0.05 254);
+  --green-tint:  oklch(0.30 0.05 162);
+  --amber-tint:  oklch(0.32 0.06 78);
+  --red-tint:    oklch(0.30 0.06 27);
+
+  --grad-primary: linear-gradient(135deg, oklch(0.55 0.13 256), oklch(0.56 0.12 168));
+  --grad-blue:    linear-gradient(135deg, oklch(0.56 0.13 256), oklch(0.50 0.13 250));
+  --grad-green:   linear-gradient(135deg, oklch(0.58 0.12 166), oklch(0.52 0.13 156));
+
+  --card-grad-blue:  linear-gradient(160deg, oklch(0.27 0.05 254), oklch(0.22 0.02 256));
+  --card-grad-green: linear-gradient(160deg, oklch(0.27 0.05 165), oklch(0.22 0.02 256));
+  --header-grad:     linear-gradient(150deg, oklch(0.40 0.11 256), oklch(0.36 0.09 200) 55%, oklch(0.40 0.10 168));
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow:    0 2px 8px oklch(0 0 0 / 0.4), 0 12px 28px oklch(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 24px oklch(0 0 0 / 0.5), 0 24px 60px oklch(0 0 0 / 0.55);
+  --on-grad: oklch(1 0 0);
+  --scrim: oklch(0 0 0 / 0.6);
+}
+
+* { box-sizing: border-box; }
+
+.ll-app, .ll-app * { font-family: var(--app-font); }
+
+/* generic resets used inside the app */
+.ll-app button { font-family: inherit; cursor: pointer; border: none; background: none; }
+.ll-app input, .ll-app select { font-family: inherit; }
+
+/* scrollbars inside phone */
+.ll-scroll { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.ll-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.ll-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+.ll-scroll::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes ll-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ll-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ll-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ll-pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }

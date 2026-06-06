@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+/*
+ * LendLedger — dual theme matched to docs/design/ screenshots
+ *
+ * LIGHT: soft lavender page (#EEF2FF), white cards/nav, royal blue CTAs
+ * DARK:  slate-900 shell (#0F172A), slate-800 cards (#1E293B), pale stat text (#CBD5E1)
+ *
+ * IMPORTANT: dark: variants follow the .dark class on <html>, NOT system preference.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-heading: "Manrope", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Semantic tokens — light defaults; .dark overrides below */
+  --color-app: #eef2ff;
+  --color-header: #e8eef5;
+  --color-card: #ffffff;
+  --color-nav: #ffffff;
+  --color-input: #f1f5f9;
+  --color-track: #e2e8f0;
+
+  --color-on-surface: #1e293b;
+  --color-on-surface-variant: #64748b;
+  --color-inverse-on-surface: #ffffff;
+  --color-stat: #2563eb;
+
+  --color-primary: #2563eb;
+  --color-primary-dim: #93c5fd;
+  --color-primary-container: #2563eb;
+  --color-on-primary-container: #ffffff;
+
+  --color-hero: #3b66f5;
+  --color-success: #10b981;
+  --color-success-bright: #34d399;
+  --color-warning: #f59e0b;
+  --color-outstanding: #dc2626;
+
+  --color-secondary: #10b981;
+  --color-secondary-container: rgba(16, 185, 129, 0.12);
+  --color-on-secondary-container: #059669;
+
+  --color-tertiary: #f59e0b;
+  --color-tertiary-container: rgba(245, 158, 11, 0.12);
+
+  --color-error: #ef4444;
+  --color-error-container: rgba(239, 68, 68, 0.1);
+
+  --color-outline-variant: #e2e8f0;
+  --color-chart-expected: #94a3b8;
+  --color-chart-expected-dark: #64748b;
+}
+
+.dark {
+  --color-app: #0f172a;
+  --color-header: #0f172a;
+  --color-card: #1e293b;
+  --color-nav: #0f172a;
+  --color-input: #1c222e;
+  --color-track: #334155;
+
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #94a3b8;
+  --color-stat: #cbd5e1;
+
+  --color-primary: #5e72e4;
+  --color-primary-dim: #93c5fd;
+  --color-primary-container: #3b66f5;
+
+  --color-hero: #3b66f5;
+  --color-success: #34d399;
+  --color-success-bright: #76e094;
+  --color-warning: #f59e0b;
+  --color-outstanding: #fca5a5;
+
+  --color-outline-variant: #334155;
+  --color-chart-expected: #64748b;
+  --color-chart-expected-dark: #475569;
+}
+
+@layer utilities {
+  .bg-app {
+    background-color: var(--color-app);
+  }
+
+  .bg-header {
+    background-color: var(--color-header);
+  }
+
+  .bg-card {
+    background-color: var(--color-card);
+  }
+
+  .bg-nav {
+    background-color: var(--color-nav);
+  }
+
+  .bg-input {
+    background-color: var(--color-input);
+  }
+
+  .bg-track {
+    background-color: var(--color-track);
+  }
+
+  .bg-hero {
+    background: linear-gradient(135deg, #3b66f5 0%, #2563eb 100%);
+  }
+
+  .text-stat {
+    color: var(--color-stat);
+  }
+
+  .text-outstanding {
+    color: var(--color-outstanding);
+  }
+
+  .border-subtle {
+    border-color: color-mix(in srgb, var(--color-outline-variant) 55%, transparent);
+  }
+
+  .hover-row:hover {
+    background-color: color-mix(in srgb, var(--color-input) 65%, var(--color-card));
+  }
+
+  .glass-card {
+    background: color-mix(in srgb, var(--color-card) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 12px rgba(59, 102, 245, 0.28);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Primary pill buttons — lighter sky → royal gradient */
+  .btn-gradient {
+    background: linear-gradient(90deg, #60a5fa 0%, #2563eb 100%);
+  }
+
+  .dark .btn-gradient {
+    background: linear-gradient(90deg, #5e72e4 0%, #3b66f5 100%);
+  }
+
+  /* FAB / active nav — blue → green */
+  .btn-gradient-green {
+    background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+  }
+
+  .dark .btn-gradient-green {
+    background: linear-gradient(135deg, #3b66f5 0%, #34d399 100%);
+  }
+
+  /* Hero summary cards — solid royal blue */
+  .btn-hero {
+    background: linear-gradient(135deg, #3b66f5 0%, #2563eb 100%);
+  }
+
+  /* Active bottom-nav pill */
+  .nav-active {
+    background: var(--color-primary-container);
+    color: #ffffff;
+  }
+}
+
+body {
+  background-color: var(--color-app);
+  color: var(--color-on-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-sans);
+}
