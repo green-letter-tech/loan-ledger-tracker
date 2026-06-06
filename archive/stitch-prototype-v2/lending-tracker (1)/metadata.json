@@ -1,0 +1,6 @@
+{
+  "name": "LendLedger",
+  "description": "A refined, professional ledger app to track credit transactions, expect and log daily payments, and audit customer outstanding debt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
