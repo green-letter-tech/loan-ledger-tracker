@@ -336,7 +336,7 @@ git commit -m "feat(core): add loan calculator with unit tests"
 **Implementation notes (Task 4):**
 
 - **Source of truth for math:** `docs/superpowers/specs/2026-05-25-lendledger-design.md` §7; verified against `Lend Ledger/app/screens-core.jsx` calculator logic.
-- **`dates.ts`:** `day` → rate% as-is; `month` → rate÷30; `year` → rate÷365; then ÷100 for decimal. Duration: months×30, years×365.
+- **`dates.ts`:** Rate: `day` / `month÷30` / `year÷365`. Duration: **calendar-aware** (`computeEndDate`, `listEntryDates`); see README.
 - **`calculator.ts`:** Flat interest; amounts rounded to 2 dp; `dailyExpected` is 0 when `durationDays` is 0.
 - **`format.ts`:** Lakh grouping (`1,50,000`); optional paise display for calculator outputs.
 - **Package docs:** `packages/core/README.md` — formula, scripts, how to extend with TDD.
@@ -421,11 +421,14 @@ Run: `npm run mobile:web` → theme preview with Light/Dark/System chips and bra
 
 Canonical design reference remains `Lend Ledger/` HTML preview until Expo screens reach parity.
 
-**Duration / calendar model (Task 4 clarification):**
+**Duration / calendar model (updated — calendar-aware):**
 
-- Loan **math** uses fixed 30-day months and 365-day years (not calendar-aware).
-- **Daily entry rows** (Tasks 7–8) use real consecutive calendar dates from `start_date`.
-- Feb 28/29 and 31-day months do not change the interest formula — documented in `packages/core/README.md`.
+- **Decision (2026-06-06):** Replaced fixed 30/365 duration with **device calendar** math in `@lendledger/core`.
+- `months` / `years` require `startDate`; `endDate` and `durationDays` derived from real calendar boundaries.
+- Example: Feb 15 + **30 days** → ends Mar 16; Feb 15 + **1 month** → ends Mar 15 (different terms, different daily ₹).
+- `listEntryDates()` + `computeEndDate()` ready for Tasks 7–8; `end_date` always matches last `daily_entry`.
+- HTML handoff calculator still uses fixed 30/365 for preview — Expo app uses calendar-aware core (intentional UX upgrade).
+- Full detail: `packages/core/README.md`, tests in `__tests__/dates.test.ts`.
 
 ---
 

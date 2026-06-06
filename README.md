@@ -43,10 +43,10 @@ Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
 
 ### Core package (`@lendledger/core`)
 
-Shared loan math and INR formatting — documented in `packages/core/README.md`.
+Shared loan math and INR formatting — **calendar-aware** loan terms (months/years use device calendar + `startDate`). See `packages/core/README.md`.
 
 ```bash
-npm run test:core    # run unit tests
+npm run test:core    # 18 unit tests (calculator, dates, format)
 ```
 
 ### Mobile theme preview

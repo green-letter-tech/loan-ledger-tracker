@@ -7,15 +7,15 @@ Shared loan math, types, and INR formatting for LendLedger. Used by `apps/mobile
 | Module | Purpose |
 |--------|---------|
 | `calculator.ts` | `calculateLoan()` — flat/simple interest, daily repayment spread |
-| `dates.ts` | Normalize rate period and duration unit to daily values |
+| `dates.ts` | Calendar-aware duration, entry dates, rate normalization |
 | `format.ts` | `formatINR()` / `groupINR()` — Indian lakh grouping |
 | `types.ts` | Input/output types for loan calculations |
 
-## Loan formula (spec §7)
+## Loan formula
 
 ```
 dailyRate     = normalizeRate(interestRate, ratePeriod)   // day | month | year
-durationDays  = normalizeDuration(duration, durationUnit) // days | months | years
+durationDays  = inclusive calendar days from start → end
 totalInterest = principal × dailyRate × durationDays
 totalExpected = principal + totalInterest
 dailyExpected = totalExpected ÷ durationDays
@@ -23,28 +23,35 @@ dailyExpected = totalExpected ÷ durationDays
 
 **Canonical example:** ₹100 principal, 1% per day, 50 days → ₹50 interest → ₹150 total → **₹3/day**.
 
-Rate normalization matches the approved UI handoff (`Lend Ledger/app/screens-core.jsx`):
+### Rate normalization (unchanged)
 
 - Per day → rate as entered
 - Per month → rate ÷ 30
 - Per year → rate ÷ 365
 
-Duration normalization (loan **term math only**):
+### Duration — calendar-aware (device calendar)
 
-- Days → as entered
-- Months → × **30** (fixed; not calendar months)
-- Years → × **365** (fixed; not leap-year aware)
+Uses local `Date` math on `YYYY-MM-DD` strings (no UTC off-by-one). **Requires `startDate`** when `durationUnit` is `months` or `years`.
 
-### Calendar vs fixed duration (important)
+| Unit | End date | Example (start 2026-02-15) |
+|------|----------|------------------------------|
+| **days** | start + (N − 1) days | 30 days → ends **2026-03-16** (30 payment days) |
+| **months** | add N calendar months (clamp day) | 1 month → ends **2026-03-15** (29 days) |
+| **years** | add N calendar years | 1 year → ends **2027-02-15** |
 
-| Layer | Uses calendar? | Notes |
-|-------|----------------|-------|
-| **Calculator / `durationDays`** | No | 2 months = 60 days always; Feb 28/29 and 31-day months are ignored |
-| **Daily entry rows** (Tasks 7–8) | Yes | One row per real calendar day from `start_date` for `durationDays` count |
+**Why this matters:** “30 days” and “1 month” from Feb 15 are different terms — avoids false delinquency from mismatched end dates.
 
-Example: “2 months” → 60 days of interest math → 60 consecutive calendar dates when the loan is saved (e.g. Jan 31 start crosses into March; still 60 rows).
+Month-end clamp: Jan 31 + 1 month → Feb 28 (or Feb 29 in leap years).
 
-This matches `Lend Ledger/app/screens-core.jsx` and spec §7. Changing to true calendar months would be a product decision, not a bug fix.
+### Helpers for Tasks 7–8 (SQLite / daily entries)
+
+```typescript
+computeEndDate(startDate, duration, durationUnit)  // last payment day
+listEntryDates(startDate, durationDays)            // one ISO date per row
+normalizeDurationDays(duration, unit, startDate)    // day count for interest
+```
+
+`end_date` in the database = `computeEndDate(...)` = last row in `listEntryDates(...)`.
 
 ## Scripts
 
