@@ -22,11 +22,18 @@ const STATUSES: LoanStatusLabel[] = ['Paid', 'Unpaid', 'Partial', 'Active', 'Clo
 export function DevPreviewScreen() {
   const { themePreference, resolvedTheme, tokens, setThemePreference } = useTheme();
   const [dbStatus, setDbStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
     initializeDatabase()
-      .then(() => setDbStatus('ready'))
-      .catch(() => setDbStatus('error'));
+      .then(() => {
+        setDbStatus('ready');
+        setDbError(null);
+      })
+      .catch((error: unknown) => {
+        setDbStatus('error');
+        setDbError(error instanceof Error ? error.message : String(error));
+      });
   }, []);
 
   return (
@@ -44,8 +51,21 @@ export function DevPreviewScreen() {
             Tasks 5–7 — theme, UI primitives, SQLite v1
           </Text>
           <Text style={[styles.meta, { color: tokens.textFaint }]}>
-            Database: {dbStatus === 'loading' ? '…' : dbStatus === 'ready' ? 'ready' : 'error'}
+            Database:{' '}
+            {dbStatus === 'loading'
+              ? 'initializing…'
+              : dbStatus === 'ready'
+                ? 'ready'
+                : 'error'}
           </Text>
+          {dbStatus === 'error' && dbError ? (
+            <Text style={[styles.meta, { color: tokens.red, marginTop: 4 }]}>{dbError}</Text>
+          ) : null}
+          {dbStatus === 'loading' ? (
+            <Text style={[styles.meta, { color: tokens.textFaint, marginTop: 4 }]}>
+              If this stays stuck, stop the server (Ctrl+C) and run npm run mobile:web again.
+            </Text>
+          ) : null}
         </View>
         <Avatar initials="RK" hue={254} />
       </View>
