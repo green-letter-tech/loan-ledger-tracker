@@ -19,6 +19,10 @@ Design tokens: `Lend Ledger/app/tokens.css`
 
 `docs/superpowers/specs/2026-05-25-lendledger-design.md`
 
+## Implementation plan (MVP1)
+
+`docs/superpowers/plans/2026-06-06-lendledger-mvp1.md` — step-by-step build guide (foundation-first, Play Store publish)
+
 ## Archive
 
 Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not used for implementation).
@@ -26,5 +30,10 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
 ## Status
 
 - **UI design:** semi-final (`Lend Ledger/`)
-- **Expo app:** not started
+- **MVP1 implementation:** in progress on `feature/UI_implementation`
+  - ✅ **Task 1** — monorepo workspace root (`package.json`, `tsconfig.base.json`)
+  - ✅ **Task 2** — Expo app scaffold (`apps/mobile`, `npm run mobile:web`)
+  - ⏳ **Task 3** — `packages/core` setup (next)
 - **Play Store MVP:** planned
+
+Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
