@@ -24,9 +24,10 @@
 | Task | Status | Notes |
 |------|--------|-------|
 | **1. Workspace root** | **Done** (2026-06-06) | `package.json`, `tsconfig.base.json`, `.gitignore`, `npm install` OK. Local commit `4bd7467` on `feature/UI_implementation`. |
-| **2. Expo app scaffold** | **Done** (2026-06-06) | `apps/mobile` (Expo SDK 56, `@lendledger/mobile`), deps installed (no `@lendledger/core` yet), `app.json` configured, LL icons. `npm run mobile:web` OK. Local commit pending. |
-| 3. `packages/core` setup | Pending | Next |
-| 4–24 | Pending | See phases below |
+| **2. Expo app scaffold** | **Done** (2026-06-06) | `apps/mobile` (Expo SDK 56, `@lendledger/mobile`), deps installed (no `@lendledger/core` yet), `app.json` configured, LL icons. `npm run mobile:web` OK. Local commit `bb4f0a1`. |
+| **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit pending. |
+| 4. Calculator with tests | Pending | Next |
+| 5–24 | Pending | See phases below |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
@@ -197,14 +198,14 @@ git commit -m "chore: scaffold Expo mobile app"
 
 ## Phase 2 — `packages/core` (loan math)
 
-### Task 3: Core package setup ← **Next**
+### Task 3: Core package setup ✅ Done
 
 **Files:**
 - Create: `packages/core/package.json`
 - Create: `packages/core/tsconfig.json`
 - Create: `packages/core/vitest.config.ts`
 
-- [ ] **Step 1: Create `packages/core/package.json`**
+- [x] **Step 1: Create `packages/core/package.json`**
 
 ```json
 {
@@ -221,20 +222,20 @@ git commit -m "chore: scaffold Expo mobile app"
 }
 ```
 
-- [ ] **Step 2: Install and link**
+- [x] **Step 2: Install and link**
 
 ```bash
 npm install
 npm run test:core
 ```
 
-Expected: no tests yet, vitest exits 0
+Expected: no tests yet, vitest exits 0 (`passWithNoTests: true` in vitest config).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit** — local only; not pushed to GitHub.
 
 ---
 
-### Task 4: Calculator with tests (TDD)
+### Task 4: Calculator with tests (TDD) ← **Next**
 
 **Files:**
 - Create: `packages/core/src/types.ts`

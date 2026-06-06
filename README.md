@@ -33,7 +33,8 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
 - **MVP1 implementation:** in progress on `feature/UI_implementation`
   - ✅ **Task 1** — monorepo workspace root (`package.json`, `tsconfig.base.json`)
   - ✅ **Task 2** — Expo app scaffold (`apps/mobile`, `npm run mobile:web`)
-  - ⏳ **Task 3** — `packages/core` setup (next)
+  - ✅ **Task 3** — `packages/core` setup (`npm run test:core`)
+  - ⏳ **Task 4** — calculator + tests (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
