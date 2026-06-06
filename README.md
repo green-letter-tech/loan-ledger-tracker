@@ -39,7 +39,8 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 6** — UI primitives (Card, PillButton, Avatar, … — see `apps/mobile/src/components/ui/`)
   - ✅ **Task 7** — SQLite schema & migrations (`apps/mobile/src/data/db/`)
   - ✅ **Task 8** — LoanRepository + LocalLoanRepository (`apps/mobile/src/data/repositories/`)
-  - ⏳ **Task 9** — Tab + stack navigation (next)
+  - ✅ **Task 9** — Tab + stack navigation (`apps/mobile/src/navigation/`)
+  - ⏳ **Task 10** — Onboarding flow (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
@@ -56,7 +57,7 @@ npm run test:mobile  # 3 integration tests (LocalLoanRepository)
 ### Mobile theme preview
 
 ```bash
-npm run mobile:web   # press w — DevPreviewScreen (theme + UI primitives)
+npm run mobile:web   # press w — tab shell + placeholder screens (onboarding on fresh install)
 ```
 
-See `apps/mobile/src/theme/README.md` and `apps/mobile/src/components/ui/README.md`. Full app screens land from Task 9 onward; calculator UI in Task 12.
+See `apps/mobile/src/navigation/README.md`. Calculator UI in Task 12; onboarding flow in Task 10.

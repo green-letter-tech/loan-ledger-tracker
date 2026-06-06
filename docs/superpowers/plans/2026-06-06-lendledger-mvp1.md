@@ -580,37 +580,39 @@ it('createLoan inserts one daily_entry per day', async () => {
 
 ## Phase 5 — Navigation shell
 
-### Task 9: Tab + stack navigation ← **Next**
+### Task 9: Tab + stack navigation ✅
 
 **Files:**
 - Create: `apps/mobile/src/navigation/RootNavigator.tsx`
 - Create: `apps/mobile/src/navigation/TabNavigator.tsx`
 - Create: `apps/mobile/src/navigation/types.ts`
+- Create: `apps/mobile/src/context/AppProvider.tsx`
+- Create: placeholder tab + stack screens under `apps/mobile/src/screens/`
 - Modify: `apps/mobile/App.tsx`
 
-- [ ] **Step 1: Bottom tabs — Home, Calculator, Loanees, Settings**
+- [x] **Step 1: Bottom tabs — Home, Calculator, Loanees, Settings**
 
 Match handoff tab bar: active tab uses `blue` text (not filled pill on mobile — per approved `Lend Ledger` design).
 
-- [ ] **Step 2: Stack screens**
+- [x] **Step 2: Stack screens**
 
 Push routes: `LoanDetail`, `CreateLoan`, `LoaneeForm`, `LoaneeDetail`, `ExtendLoan`, `Onboarding`.
 
-- [ ] **Step 3: First-launch gate**
+- [x] **Step 3: First-launch gate**
 
 If `owner_settings.onboarded === 0` → show `OnboardingScreen`; else → tabs.
 
-- [ ] **Step 4: Placeholder screens render with theme + empty state**
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Placeholder screens render with theme + empty state**
+- [x] **Step 5: Commit** (`feat(mobile): add tab and stack navigation shell`)
 
 ---
 
 ## Phase 6 — Onboarding & Settings
 
-### Task 10: Onboarding flow
+### Task 10: Onboarding flow ← **Next**
 
 **Files:**
-- Create: `apps/mobile/src/screens/OnboardingScreen.tsx`
+- Modify: `apps/mobile/src/screens/OnboardingScreen.tsx` (placeholder exists from Task 9)
 
 - [ ] **Step 1: Step 1 — welcome + feature bullets** (match `screens-stack.jsx` Onboarding step 0)
 - [ ] **Step 2: Step 2 — reminder setup** (enable toggle, frequency grid, default 7:00 PM)
