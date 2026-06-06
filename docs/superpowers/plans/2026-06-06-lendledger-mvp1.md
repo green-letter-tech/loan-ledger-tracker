@@ -26,9 +26,10 @@
 | **1. Workspace root** | **Done** (2026-06-06) | `package.json`, `tsconfig.base.json`, `.gitignore`, `npm install` OK. Local commit `4bd7467` on `feature/UI_implementation`. |
 | **2. Expo app scaffold** | **Done** (2026-06-06) | `apps/mobile` (Expo SDK 56, `@lendledger/mobile`), deps installed (no `@lendledger/core` yet), `app.json` configured, LL icons. `npm run mobile:web` OK. Local commit `bb4f0a1`. |
 | **3. `packages/core` setup** | **Done** (2026-06-06) | Vitest + TypeScript wired; `npm run test:core` OK (no tests yet). Local commit `a964ffa`. |
-| **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit pending. |
-| 5. Port design tokens | Pending | Next |
-| 6–24 | Pending | See phases below |
+| **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit `ef9ec82`. |
+| **5. Port design tokens** | **Done** (2026-06-06) | `ThemeProvider`, `useTheme`, theme preview screen. Local commit pending. |
+| 6. UI primitives | Pending | Next |
+| 7–24 | Pending | See phases below |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
@@ -345,14 +346,18 @@ git commit -m "feat(core): add loan calculator with unit tests"
 
 ## Phase 3 — Theme & UI primitives
 
-### Task 5: Port design tokens ← **Next**
+### Task 5: Port design tokens ✅ Done
 
 **Files:**
 - Create: `apps/mobile/src/theme/tokens.ts`
+- Create: `apps/mobile/src/theme/types.ts`
 - Create: `apps/mobile/src/theme/ThemeProvider.tsx`
 - Create: `apps/mobile/src/hooks/useTheme.ts`
+- Create: `apps/mobile/src/screens/ThemePreviewScreen.tsx`
+- Create: `apps/mobile/src/theme/README.md`
+- Modify: `apps/mobile/App.tsx`
 
-- [ ] **Step 1: Map oklch tokens from `Lend Ledger/app/tokens.css`**
+- [x] **Step 1: Map oklch tokens from `Lend Ledger/app/tokens.css`**
 
 Create light and dark token objects:
 
@@ -387,15 +392,44 @@ export const darkTokens = {
 
 Convert oklch values from handoff to hex equivalents (use computed values from approved preview).
 
-- [ ] **Step 2: ThemeProvider reads `owner_settings.theme`**
+- [x] **Step 2: ThemeProvider reads `owner_settings.theme`**
 
-Support `light` | `dark` | `system`; persist via repository (wired in Phase 4).
+Supports `light` | `dark` | `system` via React state + `useColorScheme`. SQLite persistence wired in **Task 11 (Settings)**.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Verify UI**
+
+Run: `npm run mobile:web` → theme preview with Light/Dark/System chips and brand swatches.
+
+- [x] **Step 4: Commit** — local only; not pushed to GitHub.
+
+**Implementation notes (Task 5):**
+
+- oklch → hex conversion script; full palette in `tokens.ts` (not the shortened plan snippet).
+- `ThemePreviewScreen` is temporary until Task 9 navigation replaces `App.tsx` shell.
+- **When you can test UI:** see table below.
+
+**UI testing timeline**
+
+| Task | What you can test in Expo (`npm run mobile:web`) |
+|------|--------------------------------------------------|
+| **5** ✅ | Theme preview — toggle light/dark/system, see brand colors |
+| **6** | UI primitives (Card, PillButton, etc.) on preview/dev screen |
+| **9** | Tab bar + placeholder screens (Home, Calculator, Loanees, Settings) |
+| **10–11** | Onboarding + Settings (theme persists) |
+| **12** | **Calculator screen** — live ₹ outputs from `@lendledger/core` |
+| **13+** | Create loan, loan detail, dashboard with real data |
+
+Canonical design reference remains `Lend Ledger/` HTML preview until Expo screens reach parity.
+
+**Duration / calendar model (Task 4 clarification):**
+
+- Loan **math** uses fixed 30-day months and 365-day years (not calendar-aware).
+- **Daily entry rows** (Tasks 7–8) use real consecutive calendar dates from `start_date`.
+- Feb 28/29 and 31-day months do not change the interest formula — documented in `packages/core/README.md`.
 
 ---
 
-### Task 6: UI primitives
+### Task 6: UI primitives ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/components/ui/Card.tsx`

@@ -29,11 +29,22 @@ Rate normalization matches the approved UI handoff (`Lend Ledger/app/screens-cor
 - Per month → rate ÷ 30
 - Per year → rate ÷ 365
 
-Duration normalization:
+Duration normalization (loan **term math only**):
 
 - Days → as entered
-- Months → × 30
-- Years → × 365
+- Months → × **30** (fixed; not calendar months)
+- Years → × **365** (fixed; not leap-year aware)
+
+### Calendar vs fixed duration (important)
+
+| Layer | Uses calendar? | Notes |
+|-------|----------------|-------|
+| **Calculator / `durationDays`** | No | 2 months = 60 days always; Feb 28/29 and 31-day months are ignored |
+| **Daily entry rows** (Tasks 7–8) | Yes | One row per real calendar day from `start_date` for `durationDays` count |
+
+Example: “2 months” → 60 days of interest math → 60 consecutive calendar dates when the loan is saved (e.g. Jan 31 start crosses into March; still 60 rows).
+
+This matches `Lend Ledger/app/screens-core.jsx` and spec §7. Changing to true calendar months would be a product decision, not a bug fix.
 
 ## Scripts
 

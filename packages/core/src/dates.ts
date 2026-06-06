@@ -12,7 +12,11 @@ export function normalizeDailyRate(interestRate: number, ratePeriod: RatePeriod)
   return ratePercentPerDay / 100;
 }
 
-/** Convert duration to days. Months = ×30, years = ×365. */
+/**
+ * Convert duration to days for loan math (not calendar months).
+ * Fixed factors match the approved handoff calculator: 1 month = 30 days, 1 year = 365 days.
+ * Does not vary for 28/29/30/31-day months or leap years — see `packages/core/README.md`.
+ */
 export function normalizeDurationDays(duration: number, durationUnit: DurationUnit): number {
   switch (durationUnit) {
     case 'days':
