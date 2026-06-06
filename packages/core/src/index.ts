@@ -1,4 +1,25 @@
 export { calculateLoan } from './calculator';
+export { deriveDailyEntryStatus } from './entryStatus';
+export type { DailyEntryStatus } from './entryStatus';
+export type {
+  CreateLoanInput,
+  CreateLoaneeInput,
+  DailyEntry,
+  DashboardStats,
+  DonutSlice,
+  ExtendLoanMode,
+  LinePoint,
+  Loan,
+  LoanRepository,
+  LoanStatus,
+  Loanee,
+  OwnerSettings,
+  ReminderFrequency,
+  ThemeSetting,
+  UpdateLoaneeInput,
+  UpdateOwnerSettingsInput,
+  WeeklyBarPoint,
+} from './repository-types';
 export {
   addCalendarDays,
   addCalendarMonths,

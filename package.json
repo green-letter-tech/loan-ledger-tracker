@@ -7,6 +7,7 @@
     "mobile:web": "npm run web --workspace=@lendledger/mobile",
     "mobile:android": "npm run android --workspace=@lendledger/mobile",
     "test:core": "npm run test --workspace=@lendledger/core",
+    "test:mobile": "npm run test --workspace=@lendledger/mobile",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

@@ -38,7 +38,8 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 5** — design tokens + ThemeProvider
   - ✅ **Task 6** — UI primitives (Card, PillButton, Avatar, … — see `apps/mobile/src/components/ui/`)
   - ✅ **Task 7** — SQLite schema & migrations (`apps/mobile/src/data/db/`)
-  - ⏳ **Task 8** — LoanRepository + LocalLoanRepository (next)
+  - ✅ **Task 8** — LoanRepository + LocalLoanRepository (`apps/mobile/src/data/repositories/`)
+  - ⏳ **Task 9** — Tab + stack navigation (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
@@ -48,7 +49,8 @@ Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
 Shared loan math and INR formatting — **calendar-aware** loan terms (months/years use device calendar + `startDate`). See `packages/core/README.md`.
 
 ```bash
-npm run test:core    # 18 unit tests (calculator, dates, format)
+npm run test:core    # 21 unit tests (calculator, dates, format, entryStatus)
+npm run test:mobile  # 3 integration tests (LocalLoanRepository)
 ```
 
 ### Mobile theme preview

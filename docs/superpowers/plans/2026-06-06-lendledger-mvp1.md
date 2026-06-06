@@ -530,14 +530,17 @@ CREATE TABLE daily_entries (
 
 ---
 
-### Task 8: Repository interface & local implementation ← **Next**
+### Task 8: Repository interface & local implementation ✅
 
 **Files:**
 - Create: `packages/core/src/repository-types.ts` (interfaces only)
+- Create: `packages/core/src/entryStatus.ts` (`deriveDailyEntryStatus`)
 - Create: `apps/mobile/src/data/repositories/LoanRepository.ts`
 - Create: `apps/mobile/src/data/repositories/LocalLoanRepository.ts`
+- Create: `apps/mobile/src/test-utils/expo-sqlite-node.ts` (Vitest adapter)
+- Create: `apps/mobile/src/data/repositories/__tests__/LocalLoanRepository.test.ts`
 
-- [ ] **Step 1: Define `LoanRepository` interface**
+- [x] **Step 1: Define `LoanRepository` interface**
 
 Methods (minimum):
 - `getSettings()` / `updateSettings()`
@@ -549,8 +552,8 @@ Methods (minimum):
 - `closeLoan(loanId)`
 - `getDashboardStats()` → totalLoaned, totalReceived, outstanding, activeCount, chart data
 
-- [ ] **Step 2: Implement `LocalLoanRepository` with expo-sqlite**
-- [ ] **Step 3: Integration test — create loan generates N daily entries**
+- [x] **Step 2: Implement `LocalLoanRepository` with expo-sqlite**
+- [x] **Step 3: Integration test — create loan generates N daily entries**
 
 ```typescript
 // apps/mobile/src/data/repositories/__tests__/LocalLoanRepository.test.ts
@@ -571,13 +574,13 @@ it('createLoan inserts one daily_entry per day', async () => {
 });
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit** (`feat(mobile): add LocalLoanRepository with integration tests`)
 
 ---
 
 ## Phase 5 — Navigation shell
 
-### Task 9: Tab + stack navigation
+### Task 9: Tab + stack navigation ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/navigation/RootNavigator.tsx`
