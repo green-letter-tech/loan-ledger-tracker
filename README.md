@@ -42,7 +42,8 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 9** — Tab + stack navigation (`apps/mobile/src/navigation/`)
   - ✅ **Task 10** — Onboarding flow (welcome + reminders)
   - ✅ **Task 11** — Settings screen (theme, reminders, about)
-  - ⏳ **Task 12** — Calculator screen (next)
+  - ✅ **Task 12** — Calculator screen (live `@lendledger/core` math)
+  - ⏳ **Task 13** — Create loan flow (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
@@ -53,13 +54,13 @@ Shared loan math and INR formatting — **calendar-aware** loan terms (months/ye
 
 ```bash
 npm run test:core    # 21 unit tests (calculator, dates, format, entryStatus)
-npm run test:mobile  # 6 tests (LocalLoanRepository, reminderTime)
+npm run test:mobile  # 7 tests (repository, reminderTime, calculator defaults)
 ```
 
 ### Mobile theme preview
 
 ```bash
-npm run mobile:web   # press w — tabs, onboarding on fresh install, settings persist
+npm run mobile:web   # press w — calculator tab shows live ₹3/day example
 ```
 
-See `apps/mobile/src/navigation/README.md`. Calculator UI in Task 12.
+See `apps/mobile/src/navigation/README.md`. Create-loan flow in Task 13.

@@ -641,20 +641,22 @@ If `owner_settings.onboarded === 0` → show `OnboardingScreen`; else → tabs.
 
 ## Phase 7 — Calculator & create loan
 
-### Task 12: Calculator screen ← **Next**
+### Task 12: Calculator screen ✅
 
 **Files:**
-- Create: `apps/mobile/src/screens/CalculatorScreen.tsx`
+- Modify: `apps/mobile/src/screens/CalculatorScreen.tsx`
+- Create: `apps/mobile/src/components/calculator/CalculatorInputs.tsx`
+- Create: `apps/mobile/src/types/calculator.ts`
 
-- [ ] **Step 1: Inputs — principal, rate, rate period, duration, duration unit**
-- [ ] **Step 2: Live outputs from `@lendledger/core` `calculateLoan`**
-- [ ] **Step 3: CTA "Save as loan" → navigate to CreateLoan with calc snapshot**
-- [ ] **Step 4: Verify 100 / 1% / day / 50 days shows ₹3/day**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Inputs — principal, rate, rate period, duration, duration unit**
+- [x] **Step 2: Live outputs from `@lendledger/core` `calculateLoan`**
+- [x] **Step 3: CTA "Save as loan" → navigate to CreateLoan with calc snapshot**
+- [x] **Step 4: Verify 100 / 1% / day / 50 days shows ₹3/day**
+- [x] **Step 5: Commit** (`feat(mobile): add live loan calculator screen`)
 
 ---
 
-### Task 13: Create loan flow
+### Task 13: Create loan flow ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/screens/CreateLoanScreen.tsx`
