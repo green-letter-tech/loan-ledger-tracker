@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SegmentedControl } from '../components/SegmentedControl';
+import { ReminderTimeList } from '../components/reminders/ReminderTimeList';
 import { TabScreenLayout } from '../components/TabScreenLayout';
 import { Card, Logo, Toggle } from '../components/ui';
 import { REMINDER_FREQUENCY_OPTIONS } from '../constants/reminders';
@@ -13,7 +14,6 @@ import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
 import type { ThemePreference } from '../theme/types';
-import { formatReminderTime24To12 } from '../utils/reminderTime';
 
 const THEME_OPTIONS: ReadonlyArray<{ label: string; value: ThemePreference }> = [
   { label: 'Light', value: 'light' },
@@ -22,7 +22,7 @@ const THEME_OPTIONS: ReadonlyArray<{ label: string; value: ThemePreference }> = 
 ];
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
-const SETTINGS_EXTRA_TIME = '18:00';
+const SETTINGS_EXTRA_TIME = '09:00';
 
 export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
   const { tokens, themePreference, setThemePreference } = useTheme();
@@ -76,12 +76,19 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
   );
 
   const handleAddTime = useCallback(async () => {
-    const next = reminderTimes.includes(SETTINGS_EXTRA_TIME)
-      ? reminderTimes
-      : [...reminderTimes, SETTINGS_EXTRA_TIME];
+    const next = [...reminderTimes, SETTINGS_EXTRA_TIME];
     setReminderTimes(next);
     await persistSettings({ reminderTimes: next });
   }, [persistSettings, reminderTimes]);
+
+  const handleChangeTime = useCallback(
+    async (index: number, time24: string) => {
+      const next = reminderTimes.map((time, i) => (i === index ? time24 : time));
+      setReminderTimes(next);
+      await persistSettings({ reminderTimes: next });
+    },
+    [persistSettings, reminderTimes],
+  );
 
   const handleRemoveTime = useCallback(
     async (index: number) => {
@@ -180,35 +187,12 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
                     Notification times
                   </Text>
                   {loading ? null : (
-                    <>
-                      <View style={styles.timeList}>
-                        {reminderTimes.map((time, index) => (
-                          <View
-                            key={`${time}-${index}`}
-                            style={[styles.timeRow, { backgroundColor: tokens.surfaceSunken }]}
-                          >
-                            <Ionicons name="time-outline" size={17} color={tokens.blue} />
-                            <Text style={[styles.timeText, { color: tokens.text }]}>
-                              {formatReminderTime24To12(time)}
-                            </Text>
-                            <Pressable
-                              onPress={() => handleRemoveTime(index)}
-                              hitSlop={8}
-                              accessibilityRole="button"
-                              accessibilityLabel="Remove reminder time"
-                              disabled={reminderTimes.length <= 1}
-                              style={{ opacity: reminderTimes.length <= 1 ? 0.35 : 1 }}
-                            >
-                              <Ionicons name="trash-outline" size={16} color={tokens.textFaint} />
-                            </Pressable>
-                          </View>
-                        ))}
-                      </View>
-                      <Pressable onPress={handleAddTime} style={styles.addTimeButton}>
-                        <Ionicons name="add" size={17} color={tokens.blue} />
-                        <Text style={[styles.addTimeLabel, { color: tokens.blue }]}>Add time</Text>
-                      </Pressable>
-                    </>
+                    <ReminderTimeList
+                      times={reminderTimes}
+                      onChangeTime={handleChangeTime}
+                      onAddTime={handleAddTime}
+                      onRemoveTime={handleRemoveTime}
+                    />
                   )}
                 </View>
               </View>
@@ -392,33 +376,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  timeList: {
-    gap: 8,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  timeText: {
-    flex: 1,
-    fontSize: 14.5,
-    fontWeight: '600',
-  },
-  addTimeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    marginTop: 11,
-    paddingVertical: 4,
-  },
-  addTimeLabel: {
-    fontSize: 13.5,
-    fontWeight: '700',
   },
   version: {
     fontSize: 13.5,

@@ -6,6 +6,7 @@ import type { LoanRepository, OwnerSettings } from '@lendledger/core';
 
 import { AppProvider } from './src/context/AppProvider';
 import { createLocalLoanRepository } from './src/data/repositories/LoanRepository';
+import { MobileShell } from './src/components/MobileShell';
 import { useTheme } from './src/hooks/useTheme';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BootstrapScreen } from './src/screens/BootstrapScreen';
@@ -59,9 +60,11 @@ export default function App() {
   if (bootstrap.status === 'loading' || bootstrap.status === 'error') {
     return (
       <SafeAreaProvider>
-        <ThemeProvider initialPreference="system">
-          <BootstrapScreen error={bootstrap.status === 'error' ? bootstrap.message : null} />
-        </ThemeProvider>
+        <MobileShell outerBackgroundColor="#DDE3EA">
+          <ThemeProvider initialPreference="system">
+            <BootstrapScreen error={bootstrap.status === 'error' ? bootstrap.message : null} />
+          </ThemeProvider>
+        </MobileShell>
       </SafeAreaProvider>
     );
   }
@@ -85,10 +88,13 @@ function AppNavigation({ onboarded }: { onboarded: boolean }) {
     () => (resolvedTheme === 'dark' ? navigationDarkTheme : navigationLightTheme),
     [resolvedTheme],
   );
+  const shellBackground = resolvedTheme === 'dark' ? '#0A0B0D' : '#DDE3EA';
 
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <RootNavigator onboarded={onboarded} />
-    </NavigationContainer>
+    <MobileShell outerBackgroundColor={shellBackground}>
+      <NavigationContainer theme={navigationTheme}>
+        <RootNavigator onboarded={onboarded} />
+      </NavigationContainer>
+    </MobileShell>
   );
 }

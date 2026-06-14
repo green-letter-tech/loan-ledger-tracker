@@ -26,12 +26,11 @@ export function OnboardingScreen({ navigation }: RootStackScreenProps<'Onboardin
   const [error, setError] = useState<string | null>(null);
 
   const handleAddTime = useCallback(() => {
-    setReminderTimes((current) => {
-      if (current.includes(EXTRA_DEFAULT_TIME)) {
-        return current;
-      }
-      return [...current, EXTRA_DEFAULT_TIME];
-    });
+    setReminderTimes((current) => [...current, EXTRA_DEFAULT_TIME]);
+  }, []);
+
+  const handleChangeTime = useCallback((index: number, time24: string) => {
+    setReminderTimes((current) => current.map((time, i) => (i === index ? time24 : time)));
   }, []);
 
   const handleRemoveTime = useCallback((index: number) => {
@@ -79,6 +78,7 @@ export function OnboardingScreen({ navigation }: RootStackScreenProps<'Onboardin
           error={error}
           onRemindersEnabledChange={setRemindersEnabled}
           onFrequencyChange={setFrequency}
+          onChangeTime={handleChangeTime}
           onAddTime={handleAddTime}
           onRemoveTime={handleRemoveTime}
           onBack={() => setStep(0)}

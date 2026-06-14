@@ -4,10 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BottomActionBar } from '../../components/BottomActionBar';
+import { ReminderTimeList } from '../../components/reminders/ReminderTimeList';
 import { Card, PillButton, Toggle } from '../../components/ui';
 import { REMINDER_FREQUENCY_OPTIONS } from '../../constants/reminders';
 import { useTheme } from '../../hooks/useTheme';
-import { formatReminderTime24To12 } from '../../utils/reminderTime';
 
 interface OnboardingRemindersStepProps {
   remindersEnabled: boolean;
@@ -17,6 +17,7 @@ interface OnboardingRemindersStepProps {
   error: string | null;
   onRemindersEnabledChange: (value: boolean) => void;
   onFrequencyChange: (value: ReminderFrequency) => void;
+  onChangeTime: (index: number, time24: string) => void;
   onAddTime: () => void;
   onRemoveTime: (index: number) => void;
   onBack: () => void;
@@ -31,6 +32,7 @@ export function OnboardingRemindersStep({
   error,
   onRemindersEnabledChange,
   onFrequencyChange,
+  onChangeTime,
   onAddTime,
   onRemoveTime,
   onBack,
@@ -122,33 +124,12 @@ export function OnboardingRemindersStep({
 
             <View>
               <Text style={[styles.sectionLabel, { color: tokens.textSoft }]}>Reminder time</Text>
-              <View style={styles.timeList}>
-                {reminderTimes.map((time, index) => (
-                  <View
-                    key={`${time}-${index}`}
-                    style={[styles.timeRow, { backgroundColor: tokens.surfaceSunken }]}
-                  >
-                    <Ionicons name="time-outline" size={18} color={tokens.blue} />
-                    <Text style={[styles.timeText, { color: tokens.text }]}>
-                      {formatReminderTime24To12(time)}
-                    </Text>
-                    {reminderTimes.length > 1 ? (
-                      <Pressable
-                        onPress={() => onRemoveTime(index)}
-                        hitSlop={8}
-                        accessibilityRole="button"
-                        accessibilityLabel="Remove reminder time"
-                      >
-                        <Ionicons name="close" size={16} color={tokens.textFaint} />
-                      </Pressable>
-                    ) : null}
-                  </View>
-                ))}
-              </View>
-              <Pressable onPress={onAddTime} style={styles.addTimeButton}>
-                <Ionicons name="add" size={17} color={tokens.blue} />
-                <Text style={[styles.addTimeLabel, { color: tokens.blue }]}>Add another time</Text>
-              </Pressable>
+              <ReminderTimeList
+                times={reminderTimes}
+                onChangeTime={onChangeTime}
+                onAddTime={onAddTime}
+                onRemoveTime={onRemoveTime}
+              />
             </View>
           </View>
           </View>
@@ -184,9 +165,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingBottom: 24,
     gap: 8,
+    maxWidth: 390,
+    width: '100%',
+    alignSelf: 'center',
   },
   bellIcon: {
     width: 56,
@@ -246,32 +230,6 @@ const styles = StyleSheet.create({
   frequencyLabel: {
     fontSize: 13,
     fontWeight: '600',
-  },
-  timeList: {
-    gap: 8,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  timeText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  addTimeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    marginTop: 10,
-  },
-  addTimeLabel: {
-    fontSize: 13.5,
-    fontWeight: '700',
   },
   error: {
     fontSize: 14,

@@ -108,8 +108,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 34,
+    paddingHorizontal: 24,
     paddingVertical: 20,
+    maxWidth: 390,
+    width: '100%',
+    alignSelf: 'center',
   },
   brand: {
     marginTop: 28,
