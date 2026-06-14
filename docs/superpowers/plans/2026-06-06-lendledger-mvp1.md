@@ -609,35 +609,39 @@ If `owner_settings.onboarded === 0` → show `OnboardingScreen`; else → tabs.
 
 ## Phase 6 — Onboarding & Settings
 
-### Task 10: Onboarding flow ← **Next**
+### Task 10: Onboarding flow ✅
 
 **Files:**
-- Modify: `apps/mobile/src/screens/OnboardingScreen.tsx` (placeholder exists from Task 9)
+- Modify: `apps/mobile/src/screens/OnboardingScreen.tsx`
+- Create: `apps/mobile/src/screens/onboarding/*`
+- Create: `apps/mobile/src/components/BottomActionBar.tsx`, `Toggle.tsx`
+- Create: `apps/mobile/src/constants/reminders.ts`, `utils/reminderTime.ts`
 
-- [ ] **Step 1: Step 1 — welcome + feature bullets** (match `screens-stack.jsx` Onboarding step 0)
-- [ ] **Step 2: Step 2 — reminder setup** (enable toggle, frequency grid, default 7:00 PM)
-- [ ] **Step 3: On complete — save settings, set `onboarded = 1`, navigate to Dashboard**
-- [ ] **Step 4: Manual test — fresh install shows onboarding once**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Step 1 — welcome + feature bullets** (match `screens-stack.jsx` Onboarding step 0)
+- [x] **Step 2: Step 2 — reminder setup** (enable toggle, frequency grid, default 7:00 PM)
+- [x] **Step 3: On complete — save settings, set `onboarded = 1`, navigate to Dashboard**
+- [x] **Step 4: Manual test — fresh install shows onboarding once**
+- [x] **Step 5: Commit** (`feat(mobile): add onboarding welcome and reminder steps`)
 
 ---
 
-### Task 11: Settings screen
+### Task 11: Settings screen ✅
 
 **Files:**
-- Create: `apps/mobile/src/screens/SettingsScreen.tsx`
+- Modify: `apps/mobile/src/screens/SettingsScreen.tsx`
+- Create: `apps/mobile/src/components/SegmentedControl.tsx`
 
-- [ ] **Step 1: Appearance — Light / Dark / System segmented control**
-- [ ] **Step 2: Reminders — enable toggle, frequency select, time list add/remove**
-- [ ] **Step 3: About — version 1.0.0, privacy placeholder link, "data on this device"**
-- [ ] **Step 4: Persist all changes via repository**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Appearance — Light / Dark / System segmented control**
+- [x] **Step 2: Reminders — enable toggle, frequency select, time list add/remove**
+- [x] **Step 3: About — version 1.0.0, privacy placeholder link, "data on this device"**
+- [x] **Step 4: Persist all changes via repository**
+- [x] **Step 5: Commit** (`feat(mobile): add settings screen with persisted preferences`)
 
 ---
 
 ## Phase 7 — Calculator & create loan
 
-### Task 12: Calculator screen
+### Task 12: Calculator screen ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/screens/CalculatorScreen.tsx`

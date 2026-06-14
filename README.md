@@ -40,7 +40,9 @@ Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not u
   - ✅ **Task 7** — SQLite schema & migrations (`apps/mobile/src/data/db/`)
   - ✅ **Task 8** — LoanRepository + LocalLoanRepository (`apps/mobile/src/data/repositories/`)
   - ✅ **Task 9** — Tab + stack navigation (`apps/mobile/src/navigation/`)
-  - ⏳ **Task 10** — Onboarding flow (next)
+  - ✅ **Task 10** — Onboarding flow (welcome + reminders)
+  - ✅ **Task 11** — Settings screen (theme, reminders, about)
+  - ⏳ **Task 12** — Calculator screen (next)
 - **Play Store MVP:** planned
 
 Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
@@ -51,13 +53,13 @@ Shared loan math and INR formatting — **calendar-aware** loan terms (months/ye
 
 ```bash
 npm run test:core    # 21 unit tests (calculator, dates, format, entryStatus)
-npm run test:mobile  # 3 integration tests (LocalLoanRepository)
+npm run test:mobile  # 6 tests (LocalLoanRepository, reminderTime)
 ```
 
 ### Mobile theme preview
 
 ```bash
-npm run mobile:web   # press w — tab shell + placeholder screens (onboarding on fresh install)
+npm run mobile:web   # press w — tabs, onboarding on fresh install, settings persist
 ```
 
-See `apps/mobile/src/navigation/README.md`. Calculator UI in Task 12; onboarding flow in Task 10.
+See `apps/mobile/src/navigation/README.md`. Calculator UI in Task 12.

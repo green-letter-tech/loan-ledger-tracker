@@ -35,7 +35,7 @@ export function ThemeProvider({
 
   const setThemePreference = useCallback((preference: ThemePreference) => {
     setThemePreferenceState(preference);
-    // Persist via LoanRepository.updateSettings() in Task 11.
+    // Persist via LoanRepository.updateSettings() from Settings / onboarding screens.
   }, []);
 
   const value = useMemo<ThemeContextValue>(
