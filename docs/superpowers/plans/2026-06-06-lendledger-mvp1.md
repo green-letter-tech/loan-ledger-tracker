@@ -656,22 +656,23 @@ If `owner_settings.onboarded === 0` → show `OnboardingScreen`; else → tabs.
 
 ---
 
-### Task 13: Create loan flow ← **Next**
+### Task 13: Create loan flow ✅
 
 **Files:**
-- Create: `apps/mobile/src/screens/CreateLoanScreen.tsx`
+- Modify: `apps/mobile/src/screens/CreateLoanScreen.tsx`
+- Create: `apps/mobile/src/components/create-loan/*`
 
-- [ ] **Step 1: Loanee picker (existing list + add new inline)**
-- [ ] **Step 2: Start date picker (default today)**
-- [ ] **Step 3: Confirm summary → `repo.createLoan()`**
-- [ ] **Step 4: Navigate to LoanDetail on success**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Loanee picker (existing list + add new inline)**
+- [x] **Step 2: Start date picker (default today)**
+- [x] **Step 3: Confirm summary → `repo.createLoan()`**
+- [x] **Step 4: Navigate to LoanDetail on success**
+- [x] **Step 5: Commit** (`feat(mobile): add create loan flow`)
 
 ---
 
 ## Phase 8 — Loanees
 
-### Task 14: Loanees list & form
+### Task 14: Loanees list & form ← **Next**
 
 **Files:**
 - Create: `apps/mobile/src/screens/LoaneesScreen.tsx`

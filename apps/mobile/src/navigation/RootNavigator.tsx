@@ -37,7 +37,11 @@ export function RootNavigator({ onboarded }: RootNavigatorProps) {
       />
       <Stack.Screen name="Main" component={TabNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="LoanDetail" component={LoanDetailScreen} options={{ title: 'Loan' }} />
-      <Stack.Screen name="CreateLoan" component={CreateLoanScreen} options={{ title: 'New loan' }} />
+      <Stack.Screen
+        name="CreateLoan"
+        component={CreateLoanScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="LoaneeForm" component={LoaneeFormScreen} options={{ title: 'Loanee' }} />
       <Stack.Screen
         name="LoaneeDetail"
