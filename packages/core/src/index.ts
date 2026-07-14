@@ -1,4 +1,10 @@
 export { calculateLoan } from './calculator';
+export {
+  computeOutstandingBalance,
+  computeRecalculateDaily,
+  previewExtendLoan,
+} from './extendLoan';
+export type { ExtendLoanPreview, ExtendLoanPreviewInput } from './extendLoan';
 export { deriveDailyEntryStatus } from './entryStatus';
 export type { DailyEntryStatus } from './entryStatus';
 export type {
@@ -25,13 +31,18 @@ export {
   addCalendarMonths,
   addCalendarYears,
   computeEndDate,
+  computeExpectedPerEntry,
   formatISODateLocal,
   inclusiveDaysBetween,
   listEntryDates,
   normalizeDailyRate,
   normalizeDurationDays,
   parseISODateLocal,
+  paymentPeriodLabel,
+  paymentProgressLabel,
 } from './dates';
+export { buildPaymentSchedule } from './paymentSchedule';
+export type { PaymentSchedule } from './paymentSchedule';
 export { formatINR, groupINR } from './format';
 export type {
   DurationUnit,

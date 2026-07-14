@@ -62,6 +62,8 @@ export interface Loan {
   principal: number;
   interestRate: number;
   ratePeriod: RatePeriod;
+  durationUnit: DurationUnit;
+  durationCount: number;
   durationDays: number;
   dailyExpected: number;
   totalExpected: number;

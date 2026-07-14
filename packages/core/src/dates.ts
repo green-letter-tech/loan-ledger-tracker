@@ -106,16 +106,85 @@ export function normalizeDurationDays(
   }
 }
 
-/** One ISO date per payment day, inclusive from start through end. */
-export function listEntryDates(startDate: ISODateString, durationDays: number): ISODateString[] {
-  if (durationDays <= 0) {
+/**
+ * Payment due dates for a loan term.
+ * - `days`: one entry per calendar day (duration = day count)
+ * - `months` / `years`: one entry per period (duration = period count)
+ */
+export function listEntryDates(
+  startDate: ISODateString,
+  duration: number,
+  durationUnit: DurationUnit,
+): ISODateString[] {
+  if (duration <= 0) {
     return [];
   }
-  const dates: ISODateString[] = [];
-  for (let i = 0; i < durationDays; i += 1) {
-    dates.push(addCalendarDays(startDate, i));
+
+  switch (durationUnit) {
+    case 'days': {
+      const dates: ISODateString[] = [];
+      for (let i = 0; i < duration; i += 1) {
+        dates.push(addCalendarDays(startDate, i));
+      }
+      return dates;
+    }
+    case 'months': {
+      const dates: ISODateString[] = [];
+      for (let i = 0; i < duration; i += 1) {
+        dates.push(addCalendarMonths(startDate, i));
+      }
+      return dates;
+    }
+    case 'years': {
+      const dates: ISODateString[] = [];
+      for (let i = 0; i < duration; i += 1) {
+        dates.push(addCalendarYears(startDate, i));
+      }
+      return dates;
+    }
+    default: {
+      const _exhaustive: never = durationUnit;
+      throw new Error(`Unhandled duration unit: ${_exhaustive}`);
+    }
   }
-  return dates;
+}
+
+/** Evenly split total repayable across scheduled payment dates. */
+export function computeExpectedPerEntry(totalExpected: number, entryCount: number): number {
+  if (entryCount <= 0) {
+    return 0;
+  }
+  return Math.round((totalExpected / entryCount) * 100) / 100;
+}
+
+export function paymentPeriodLabel(durationUnit: DurationUnit): string {
+  switch (durationUnit) {
+    case 'days':
+      return 'Daily payment';
+    case 'months':
+      return 'Monthly payment';
+    case 'years':
+      return 'Yearly payment';
+    default: {
+      const _exhaustive: never = durationUnit;
+      throw new Error(`Unhandled duration unit: ${_exhaustive}`);
+    }
+  }
+}
+
+export function paymentProgressLabel(durationUnit: DurationUnit): string {
+  switch (durationUnit) {
+    case 'days':
+      return 'days logged';
+    case 'months':
+      return 'months logged';
+    case 'years':
+      return 'years logged';
+    default: {
+      const _exhaustive: never = durationUnit;
+      throw new Error(`Unhandled duration unit: ${_exhaustive}`);
+    }
+  }
 }
 
 /** Convert UI rate (percent) to decimal daily rate. */

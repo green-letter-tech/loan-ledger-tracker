@@ -3,6 +3,7 @@ import {
   calculateLoan,
   formatINR,
   formatISODateLocal,
+  paymentPeriodLabel,
   type DurationUnit,
   type RatePeriod,
 } from '@lendledger/core';
@@ -157,7 +158,9 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
 
         {result ? (
           <Card grad="green" pad={18} elev style={styles.resultCard}>
-            <Text style={[styles.resultLabel, { color: tokens.textSoft }]}>Daily payment</Text>
+            <Text style={[styles.resultLabel, { color: tokens.textSoft }]}>
+              {paymentPeriodLabel(durationUnit)}
+            </Text>
             <Text style={[styles.dailyAmount, { color: tokens.green }]}>
               {formatINR(result.dailyExpected, true)}
             </Text>

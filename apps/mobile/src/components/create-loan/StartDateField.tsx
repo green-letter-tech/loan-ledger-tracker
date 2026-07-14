@@ -9,9 +9,11 @@ import { formatStartDateLabel, isValidISODate } from '../../utils/formatStartDat
 interface StartDateFieldProps {
   value: ISODateString;
   onChange: (value: ISODateString) => void;
+  onFocus?: () => void;
+  hint?: string;
 }
 
-export function StartDateField({ value, onChange }: StartDateFieldProps) {
+export function StartDateField({ value, onChange, onFocus, hint }: StartDateFieldProps) {
   const { tokens } = useTheme();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -50,6 +52,7 @@ export function StartDateField({ value, onChange }: StartDateFieldProps) {
               onChangeText={setDraft}
               onBlur={commitDraft}
               onSubmitEditing={commitDraft}
+              onFocus={onFocus}
               autoFocus
               placeholder="YYYY-MM-DD"
               placeholderTextColor={tokens.textFaint}
@@ -61,7 +64,7 @@ export function StartDateField({ value, onChange }: StartDateFieldProps) {
           <>
             <Text style={[styles.label, { color: tokens.text }]}>{formatStartDateLabel(value)}</Text>
             <Text style={[styles.hint, { color: tokens.textFaint }]}>
-              Daily entries start from this date
+              {hint ?? 'Payments are scheduled from this date'}
             </Text>
           </>
         )}

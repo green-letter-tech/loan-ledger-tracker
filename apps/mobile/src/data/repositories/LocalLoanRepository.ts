@@ -1,8 +1,11 @@
 import {
   addCalendarDays,
+  buildPaymentSchedule,
   calculateLoan,
+  computeOutstandingBalance,
+  computeRecalculateDaily,
   deriveDailyEntryStatus,
-  listEntryDates,
+  formatISODateLocal,
   type CreateLoanInput,
   type CreateLoaneeInput,
   type DailyEntry,
@@ -130,10 +133,32 @@ export class LocalLoanRepository implements LoanRepository {
       throw new Error('Cannot delete loanee with active loans');
     }
 
-    await this.db.runAsync('DELETE FROM loanees WHERE id = ? AND owner_id = ?', id, this.ownerId);
+    await this.db.withTransactionAsync(async () => {
+      const closedLoans = await this.db.getAllAsync<{ id: string }>(
+        `SELECT id FROM loans WHERE loanee_id = ? AND owner_id = ? AND status = 'closed'`,
+        id,
+        this.ownerId,
+      );
+
+      for (const loan of closedLoans) {
+        await this.db.runAsync('DELETE FROM daily_entries WHERE loan_id = ?', loan.id);
+      }
+
+      await this.db.runAsync(
+        `DELETE FROM loans WHERE loanee_id = ? AND owner_id = ? AND status = 'closed'`,
+        id,
+        this.ownerId,
+      );
+      await this.db.runAsync('DELETE FROM loanees WHERE id = ? AND owner_id = ?', id, this.ownerId);
+    });
   }
 
   async createLoan(input: CreateLoanInput): Promise<Loan> {
+    const loanee = await this.getLoaneeById(input.loaneeId);
+    if (!loanee) {
+      throw new Error(`Loanee not found: ${input.loaneeId}`);
+    }
+
     const calc = calculateLoan({
       principal: input.principal,
       interestRate: input.interestRate,
@@ -149,36 +174,44 @@ export class LocalLoanRepository implements LoanRepository {
 
     const loanId = createId();
     const createdAt = new Date().toISOString();
-    const entryDates = listEntryDates(input.startDate, calc.durationDays);
+    const schedule = buildPaymentSchedule(
+      input.startDate,
+      input.duration,
+      input.durationUnit,
+      calc.totalExpected,
+    );
 
     await this.db.withTransactionAsync(async () => {
       await this.db.runAsync(
         `INSERT INTO loans (
           id, owner_id, loanee_id, principal, interest_rate, rate_period,
-          duration_days, daily_expected, total_expected, start_date, end_date, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)`,
+          duration_unit, duration_count, duration_days, daily_expected, total_expected,
+          start_date, end_date, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)`,
         loanId,
         this.ownerId,
         input.loaneeId,
         input.principal,
         input.interestRate,
         input.ratePeriod,
+        input.durationUnit,
+        input.duration,
         calc.durationDays,
-        calc.dailyExpected,
+        schedule.expectedPerEntry,
         calc.totalExpected,
         input.startDate,
         calc.endDate,
         createdAt,
       );
 
-      for (const entryDate of entryDates) {
+      for (const entryDate of schedule.entryDates) {
         await this.db.runAsync(
           `INSERT INTO daily_entries (id, loan_id, entry_date, expected_amount, received_amount, status)
            VALUES (?, ?, ?, ?, 0, 'unpaid')`,
           createId(),
           loanId,
           entryDate,
-          calc.dailyExpected,
+          schedule.expectedPerEntry,
         );
       }
     });
@@ -205,8 +238,12 @@ export class LocalLoanRepository implements LoanRepository {
 
   async getDailyEntries(loanId: string): Promise<DailyEntry[]> {
     const rows = await this.db.getAllAsync<DailyEntryRow>(
-      'SELECT * FROM daily_entries WHERE loan_id = ? ORDER BY entry_date ASC',
+      `SELECT de.* FROM daily_entries de
+       JOIN loans l ON l.id = de.loan_id
+       WHERE de.loan_id = ? AND l.owner_id = ?
+       ORDER BY de.entry_date DESC`,
       loanId,
+      this.ownerId,
     );
     return rows.map(mapDailyEntry);
   }
@@ -216,10 +253,17 @@ export class LocalLoanRepository implements LoanRepository {
     entryDate: string,
     receivedAmount: number,
   ): Promise<DailyEntry> {
+    if (!Number.isFinite(receivedAmount) || receivedAmount < 0) {
+      throw new Error('Received amount must be a non-negative number');
+    }
+
     const row = await this.db.getFirstAsync<DailyEntryRow>(
-      'SELECT * FROM daily_entries WHERE loan_id = ? AND entry_date = ?',
+      `SELECT de.* FROM daily_entries de
+       JOIN loans l ON l.id = de.loan_id
+       WHERE de.loan_id = ? AND de.entry_date = ? AND l.owner_id = ?`,
       loanId,
       entryDate,
+      this.ownerId,
     );
     if (!row) {
       throw new Error(`Daily entry not found for ${entryDate}`);
@@ -257,11 +301,8 @@ export class LocalLoanRepository implements LoanRepository {
     let newExpected = loan.dailyExpected;
 
     if (mode === 'recalculate') {
-      const outstanding = entries.reduce(
-        (sum, entry) => sum + Math.max(0, entry.expectedAmount - entry.receivedAmount),
-        0,
-      );
-      newExpected = Math.round((outstanding / days) * 100) / 100;
+      const outstanding = computeOutstandingBalance(entries);
+      newExpected = computeRecalculateDaily(outstanding, days);
     }
 
     const newDates: string[] = [];
@@ -312,7 +353,7 @@ export class LocalLoanRepository implements LoanRepository {
       `SELECT COALESCE(SUM(de.received_amount), 0) as total
        FROM daily_entries de
        JOIN loans l ON l.id = de.loan_id
-       WHERE l.owner_id = ?`,
+       WHERE l.owner_id = ? AND l.status IN ('active', 'extended')`,
       this.ownerId,
     );
     const totalReceived = receivedRow?.total ?? 0;
@@ -338,8 +379,9 @@ export class LocalLoanRepository implements LoanRepository {
 
     const outstanding = outstandingRows.reduce((sum, row) => sum + row.outstanding, 0);
 
-    const weeklyBar = await this.buildWeeklyBar();
-    const line30d = await this.buildLine30d();
+    const today = formatISODateLocal(new Date());
+    const weeklyBar = await this.buildWeeklyBar(today);
+    const line30d = await this.buildLine30d(today);
 
     return {
       totalLoaned,
@@ -356,7 +398,8 @@ export class LocalLoanRepository implements LoanRepository {
     };
   }
 
-  private async buildWeeklyBar(): Promise<DashboardStats['weeklyBar']> {
+  private async buildWeeklyBar(today: string): Promise<DashboardStats['weeklyBar']> {
+    const weekStart = addCalendarDays(today, -6);
     const rows = await this.db.getAllAsync<{
       entry_date: string;
       expected: number;
@@ -368,10 +411,12 @@ export class LocalLoanRepository implements LoanRepository {
        FROM daily_entries de
        JOIN loans l ON l.id = de.loan_id
        WHERE l.owner_id = ?
-         AND de.entry_date >= date('now', '-6 days')
+         AND de.entry_date BETWEEN ? AND ?
        GROUP BY de.entry_date
        ORDER BY de.entry_date ASC`,
       this.ownerId,
+      weekStart,
+      today,
     );
 
     return rows.map((row) => ({
@@ -381,16 +426,19 @@ export class LocalLoanRepository implements LoanRepository {
     }));
   }
 
-  private async buildLine30d(): Promise<DashboardStats['line30d']> {
+  private async buildLine30d(today: string): Promise<DashboardStats['line30d']> {
+    const monthStart = addCalendarDays(today, -29);
     const rows = await this.db.getAllAsync<{ entry_date: string; received: number }>(
       `SELECT de.entry_date, SUM(de.received_amount) as received
        FROM daily_entries de
        JOIN loans l ON l.id = de.loan_id
        WHERE l.owner_id = ?
-         AND de.entry_date >= date('now', '-29 days')
+         AND de.entry_date BETWEEN ? AND ?
        GROUP BY de.entry_date
        ORDER BY de.entry_date ASC`,
       this.ownerId,
+      monthStart,
+      today,
     );
 
     let cumulative = 0;
@@ -448,6 +496,8 @@ function mapLoan(row: LoanRowJoined): Loan {
     principal: row.principal,
     interestRate: row.interest_rate,
     ratePeriod: row.rate_period as Loan['ratePeriod'],
+    durationUnit: (row.duration_unit ?? 'days') as Loan['durationUnit'],
+    durationCount: row.duration_count ?? row.duration_days,
     durationDays: row.duration_days,
     dailyExpected: row.daily_expected,
     totalExpected: row.total_expected,

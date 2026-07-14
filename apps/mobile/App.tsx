@@ -10,6 +10,7 @@ import { MobileShell } from './src/components/MobileShell';
 import { useTheme } from './src/hooks/useTheme';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BootstrapScreen } from './src/screens/BootstrapScreen';
+import { initReminders, syncReminders } from './src/services/reminders';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 import { darkTokens, lightTokens } from './src/theme/tokens';
 
@@ -46,9 +47,14 @@ export default function App() {
   const [bootstrap, setBootstrap] = useState<BootstrapState>({ status: 'loading' });
 
   useEffect(() => {
+    initReminders();
+
     createLocalLoanRepository()
       .then(async (repository) => {
         const settings = await repository.getSettings();
+        void syncReminders(settings).catch(() => {
+          // Non-fatal — reminders resync on next settings change.
+        });
         setBootstrap({ status: 'ready', repository, settings });
       })
       .catch((error: unknown) => {

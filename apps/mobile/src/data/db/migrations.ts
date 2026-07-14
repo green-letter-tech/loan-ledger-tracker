@@ -82,7 +82,16 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     await setUserVersion(db, 1);
   }
 
-  if (SCHEMA_VERSION > 1) {
+  if (current < 2) {
+    await db.execAsync(`
+      ALTER TABLE loans ADD COLUMN duration_unit TEXT NOT NULL DEFAULT 'days';
+      ALTER TABLE loans ADD COLUMN duration_count INTEGER NOT NULL DEFAULT 0;
+      UPDATE loans SET duration_count = duration_days WHERE duration_count = 0;
+    `);
+    await setUserVersion(db, 2);
+  }
+
+  if (SCHEMA_VERSION > 2) {
     throw new Error(`Database schema v${SCHEMA_VERSION} not implemented (at v${await getUserVersion(db)})`);
   }
 }

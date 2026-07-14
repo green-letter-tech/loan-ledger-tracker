@@ -5,7 +5,7 @@
 
 export const DB_NAME = 'lendledger.db';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export type LoanStatus = 'active' | 'extended' | 'closed';
 
@@ -53,6 +53,8 @@ export interface LoanRow {
   principal: number;
   interest_rate: number;
   rate_period: string;
+  duration_unit: string;
+  duration_count: number;
   duration_days: number;
   daily_expected: number;
   total_expected: number;

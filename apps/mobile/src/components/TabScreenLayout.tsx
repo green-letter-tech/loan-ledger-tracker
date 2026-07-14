@@ -9,10 +9,11 @@ import { useTheme } from '../hooks/useTheme';
 interface TabScreenLayoutProps {
   title: string;
   subtitle?: string;
+  headerRight?: ReactNode;
   children: ReactNode;
 }
 
-export function TabScreenLayout({ title, subtitle, children }: TabScreenLayoutProps) {
+export function TabScreenLayout({ title, subtitle, headerRight, children }: TabScreenLayoutProps) {
   const { resolvedTheme, tokens } = useTheme();
 
   return (
@@ -26,6 +27,7 @@ export function TabScreenLayout({ title, subtitle, children }: TabScreenLayoutPr
             <Text style={[styles.subtitle, { color: tokens.textSoft }]}>{subtitle}</Text>
           ) : null}
         </View>
+        {headerRight}
       </View>
       <View style={styles.body}>{children}</View>
     </SafeAreaView>

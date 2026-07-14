@@ -3,13 +3,16 @@ import {
   calculateLoan,
   formatINR,
   formatISODateLocal,
+  paymentPeriodLabel,
   type RatePeriod,
 } from '@lendledger/core';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -40,6 +43,7 @@ export function CreateLoanScreen({ navigation, route }: RootStackScreenProps<'Cr
   const { resolvedTheme, tokens } = useTheme();
   const repository = useRepository();
 
+  const scrollRef = useRef<ScrollView>(null);
   const [loanees, setLoanees] = useState<Awaited<ReturnType<typeof repository.listLoanees>>>([]);
   const [loadingLoanees, setLoadingLoanees] = useState(true);
   const [selectedLoaneeId, setSelectedLoaneeId] = useState<string | null>(
@@ -187,148 +191,171 @@ export function CreateLoanScreen({ navigation, route }: RootStackScreenProps<'Cr
         <Text style={[styles.headerTitle, { color: tokens.text }]}>Create loan</Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
       >
-        <View>
-          <SectionLabel step={1} text="Select loanee" />
-          <View style={[styles.searchWrap, { borderColor: tokens.border, backgroundColor: tokens.surface }]}>
-            <Ionicons name="search" size={18} color={tokens.textFaint} style={styles.searchIcon} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search loanees…"
-              placeholderTextColor={tokens.textFaint}
-              style={[styles.searchInput, { color: tokens.text }]}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View>
+            <SectionLabel step={1} text="Select loanee" />
+            <View
+              style={[
+                styles.searchWrap,
+                { borderColor: tokens.border, backgroundColor: tokens.surface },
+              ]}
+            >
+              <Ionicons name="search" size={18} color={tokens.textFaint} style={styles.searchIcon} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search loanees…"
+                placeholderTextColor={tokens.textFaint}
+                style={[styles.searchInput, { color: tokens.text }]}
+              />
+            </View>
+
+            {loadingLoanees ? (
+              <ActivityIndicator color={tokens.blue} style={styles.loader} />
+            ) : (
+              <View style={styles.loaneeChips}>
+                {filteredLoanees.map((loanee) => {
+                  const selected = selectedLoaneeId === loanee.id;
+                  return (
+                    <Pressable
+                      key={loanee.id}
+                      onPress={() => setSelectedLoaneeId(loanee.id)}
+                      style={[
+                        styles.loaneeChip,
+                        {
+                          borderColor: selected ? tokens.blue : tokens.border,
+                          backgroundColor: selected ? tokens.blueTint : tokens.surface,
+                        },
+                      ]}
+                    >
+                      <Avatar
+                        initials={getLoaneeInitials(loanee.name)}
+                        size={26}
+                        hue={loanee.avatarHue}
+                      />
+                      <Text
+                        style={[
+                          styles.loaneeChipLabel,
+                          { color: selected ? tokens.blue : tokens.text },
+                        ]}
+                      >
+                        {loanee.name}
+                      </Text>
+                      {selected ? <Ionicons name="checkmark" size={15} color={tokens.blue} /> : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+
+            {showAddLoanee ? (
+              <View style={[styles.addLoaneeForm, { borderColor: tokens.borderSoft }]}>
+                <TextInput
+                  value={newLoaneeName}
+                  onChangeText={setNewLoaneeName}
+                  placeholder="Loanee name"
+                  placeholderTextColor={tokens.textFaint}
+                  style={[
+                    styles.addLoaneeInput,
+                    { color: tokens.text, borderColor: tokens.border, backgroundColor: tokens.surface },
+                  ]}
+                />
+                <View style={styles.addLoaneeActions}>
+                  <PillButton
+                    variant="primary"
+                    size="sm"
+                    disabled={!newLoaneeName.trim() || addingLoanee}
+                    onPress={handleQuickAddLoanee}
+                  >
+                    {addingLoanee ? 'Saving…' : 'Save & select'}
+                  </PillButton>
+                  <Pressable onPress={() => setShowAddLoanee(false)}>
+                    <Text style={[styles.cancelAdd, { color: tokens.textSoft }]}>Cancel</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable onPress={() => setShowAddLoanee(true)} style={styles.addLoaneeLink}>
+                <Ionicons name="add" size={18} color={tokens.blue} />
+                <Text style={[styles.addLoaneeLinkText, { color: tokens.blue }]}>Add new loanee</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <View>
+            <SectionLabel step={2} text="Loan terms" />
+            <Card grad="blue" pad={16} elev>
+              {terms ? (
+                <>
+                  <View style={styles.termsGrid}>
+                    <Term label="Principal" value={formatINR(terms.principal)} tokens={tokens} />
+                    <Term
+                      label="Rate"
+                      value={`${snapshot.interestRate}% ${RATE_LABELS[snapshot.ratePeriod]}`}
+                      tokens={tokens}
+                    />
+                    <Term
+                      label="Duration"
+                      value={`${Math.round(terms.durationDays)} days`}
+                      tokens={tokens}
+                    />
+                    <Term
+                      label={paymentPeriodLabel(snapshot.durationUnit)}
+                      value={formatINR(terms.dailyExpected, true)}
+                      accent={tokens.green}
+                      tokens={tokens}
+                    />
+                  </View>
+                  <View style={[styles.divider, { backgroundColor: tokens.borderSoft }]} />
+                  <View style={styles.totalRow}>
+                    <Text style={[styles.totalLabel, { color: tokens.textSoft }]}>Total repayable</Text>
+                    <Text style={[styles.totalValue, { color: tokens.text }]}>
+                      {formatINR(terms.totalExpected, true)}
+                    </Text>
+                  </View>
+                  {terms.endDate ? (
+                    <Text style={[styles.endHint, { color: tokens.textFaint }]}>
+                      Ends {formatStartDateLabel(terms.endDate)}
+                    </Text>
+                  ) : null}
+                </>
+              ) : (
+                <Text style={[styles.endHint, { color: tokens.red }]}>
+                  Invalid start date for this loan term.
+                </Text>
+              )}
+            </Card>
+          </View>
+
+          <View>
+            <SectionLabel step={3} text="Start date" />
+            <StartDateField
+              value={startDate}
+              onChange={setStartDate}
+              onFocus={() => scrollRef.current?.scrollToEnd({ animated: true })}
+              hint={
+                snapshot.durationUnit === 'months'
+                  ? 'Monthly payments start from this date'
+                  : snapshot.durationUnit === 'years'
+                    ? 'Yearly payments start from this date'
+                    : 'Daily payments start from this date'
+              }
             />
           </View>
 
-          {loadingLoanees ? (
-            <ActivityIndicator color={tokens.blue} style={styles.loader} />
-          ) : (
-            <View style={styles.loaneeChips}>
-              {filteredLoanees.map((loanee) => {
-                const selected = selectedLoaneeId === loanee.id;
-                return (
-                  <Pressable
-                    key={loanee.id}
-                    onPress={() => setSelectedLoaneeId(loanee.id)}
-                    style={[
-                      styles.loaneeChip,
-                      {
-                        borderColor: selected ? tokens.blue : tokens.border,
-                        backgroundColor: selected ? tokens.blueTint : tokens.surface,
-                      },
-                    ]}
-                  >
-                    <Avatar
-                      initials={getLoaneeInitials(loanee.name)}
-                      size={26}
-                      hue={loanee.avatarHue}
-                    />
-                    <Text
-                      style={[
-                        styles.loaneeChipLabel,
-                        { color: selected ? tokens.blue : tokens.text },
-                      ]}
-                    >
-                      {loanee.name}
-                    </Text>
-                    {selected ? <Ionicons name="checkmark" size={15} color={tokens.blue} /> : null}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-
-          {showAddLoanee ? (
-            <View style={[styles.addLoaneeForm, { borderColor: tokens.borderSoft }]}>
-              <TextInput
-                value={newLoaneeName}
-                onChangeText={setNewLoaneeName}
-                placeholder="Loanee name"
-                placeholderTextColor={tokens.textFaint}
-                style={[
-                  styles.addLoaneeInput,
-                  { color: tokens.text, borderColor: tokens.border, backgroundColor: tokens.surface },
-                ]}
-              />
-              <View style={styles.addLoaneeActions}>
-                <PillButton
-                  variant="primary"
-                  size="sm"
-                  disabled={!newLoaneeName.trim() || addingLoanee}
-                  onPress={handleQuickAddLoanee}
-                >
-                  {addingLoanee ? 'Saving…' : 'Save & select'}
-                </PillButton>
-                <Pressable onPress={() => setShowAddLoanee(false)}>
-                  <Text style={[styles.cancelAdd, { color: tokens.textSoft }]}>Cancel</Text>
-                </Pressable>
-              </View>
-            </View>
-          ) : (
-            <Pressable onPress={() => setShowAddLoanee(true)} style={styles.addLoaneeLink}>
-              <Ionicons name="add" size={18} color={tokens.blue} />
-              <Text style={[styles.addLoaneeLinkText, { color: tokens.blue }]}>Add new loanee</Text>
-            </Pressable>
-          )}
-        </View>
-
-        <View>
-          <SectionLabel step={2} text="Loan terms" />
-          <Card grad="blue" pad={16} elev>
-            {terms ? (
-              <>
-                <View style={styles.termsGrid}>
-                  <Term label="Principal" value={formatINR(terms.principal)} tokens={tokens} />
-                  <Term
-                    label="Rate"
-                    value={`${snapshot.interestRate}% ${RATE_LABELS[snapshot.ratePeriod]}`}
-                    tokens={tokens}
-                  />
-                  <Term
-                    label="Duration"
-                    value={`${Math.round(terms.durationDays)} days`}
-                    tokens={tokens}
-                  />
-                  <Term
-                    label="Daily payment"
-                    value={formatINR(terms.dailyExpected, true)}
-                    accent={tokens.green}
-                    tokens={tokens}
-                  />
-                </View>
-                <View style={[styles.divider, { backgroundColor: tokens.borderSoft }]} />
-                <View style={styles.totalRow}>
-                  <Text style={[styles.totalLabel, { color: tokens.textSoft }]}>Total repayable</Text>
-                  <Text style={[styles.totalValue, { color: tokens.text }]}>
-                    {formatINR(terms.totalExpected, true)}
-                  </Text>
-                </View>
-                {terms.endDate ? (
-                  <Text style={[styles.endHint, { color: tokens.textFaint }]}>
-                    Ends {formatStartDateLabel(terms.endDate)}
-                  </Text>
-                ) : null}
-              </>
-            ) : (
-              <Text style={[styles.endHint, { color: tokens.red }]}>
-                Invalid start date for this loan term.
-              </Text>
-            )}
-          </Card>
-        </View>
-
-        <View>
-          <SectionLabel step={3} text="Start date" />
-          <StartDateField value={startDate} onChange={setStartDate} />
-        </View>
-
-        {error ? <Text style={[styles.error, { color: tokens.red }]}>{error}</Text> : null}
-      </ScrollView>
+          {error ? <Text style={[styles.error, { color: tokens.red }]}>{error}</Text> : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <BottomActionBar>
         <PillButton
@@ -371,6 +398,9 @@ function Term({
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+  },
+  flex: {
     flex: 1,
   },
   header: {

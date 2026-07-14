@@ -1,3 +1,7 @@
+import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
 import Database from 'better-sqlite3';
 
 type BindParams = string | number | null;
@@ -12,9 +16,15 @@ export type SQLiteDatabase = {
 };
 
 const databases = new Map<string, Database.Database>();
+const TEST_DB_DIR = join(tmpdir(), 'lendledger-test-dbs');
+
+function databasePath(databaseName: string): string {
+  mkdirSync(TEST_DB_DIR, { recursive: true });
+  return join(TEST_DB_DIR, databaseName);
+}
 
 export async function openDatabaseAsync(databaseName: string): Promise<SQLiteDatabase> {
-  const native = new Database(':memory:');
+  const native = new Database(databasePath(databaseName));
   databases.set(databaseName, native);
 
   return {
@@ -54,5 +64,10 @@ export function deleteDatabaseSync(databaseName: string): void {
   if (db) {
     db.close();
     databases.delete(databaseName);
+  }
+
+  const filePath = databasePath(databaseName);
+  if (existsSync(filePath)) {
+    unlinkSync(filePath);
   }
 }

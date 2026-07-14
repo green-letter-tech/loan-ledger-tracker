@@ -9,6 +9,8 @@ import { DEFAULT_REMINDER_TIMES } from '../constants/reminders';
 import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
+import { ensureNotificationPermissions, syncReminders } from '../services/reminders';
+import { showAlert } from '../utils/confirmAction';
 import { OnboardingRemindersStep } from './onboarding/OnboardingRemindersStep';
 import { OnboardingWelcomeStep } from './onboarding/OnboardingWelcomeStep';
 
@@ -42,12 +44,27 @@ export function OnboardingScreen({ navigation }: RootStackScreenProps<'Onboardin
     setError(null);
 
     try {
-      await repository.updateSettings({
-        remindersEnabled,
+      let effectiveRemindersEnabled = remindersEnabled;
+      if (remindersEnabled) {
+        const granted = await ensureNotificationPermissions();
+        if (!granted) {
+          effectiveRemindersEnabled = false;
+          setRemindersEnabled(false);
+          showAlert(
+            'Notifications blocked',
+            'You can enable reminders later in Settings. Continuing without notifications.',
+          );
+        }
+      }
+
+      const settings = await repository.updateSettings({
+        remindersEnabled: effectiveRemindersEnabled,
         reminderFrequency: frequency,
         reminderTimes,
         onboarded: true,
       });
+
+      await syncReminders(settings);
 
       navigation.dispatch(
         CommonActions.reset({

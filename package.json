@@ -8,6 +8,8 @@
     "mobile:android": "npm run android --workspace=@lendledger/mobile",
     "test:core": "npm run test --workspace=@lendledger/core",
     "test:mobile": "npm run test --workspace=@lendledger/mobile",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:android": "npm run build:android --workspace=@lendledger/mobile",
+    "build:android:preview": "npm run build:android:preview --workspace=@lendledger/mobile"
   }
 }

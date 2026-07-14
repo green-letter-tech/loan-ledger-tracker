@@ -19,6 +19,7 @@ export type RootStackParamList = {
   LoaneeForm: { loaneeId?: string };
   LoaneeDetail: { loaneeId: string };
   ExtendLoan: { loanId: string };
+  PrivacyPolicy: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

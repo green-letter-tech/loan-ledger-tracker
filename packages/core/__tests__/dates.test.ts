@@ -15,17 +15,32 @@ describe('calendar duration', () => {
     const start = '2026-02-15';
     expect(computeEndDate(start, 30, 'days')).toBe('2026-03-16');
     expect(normalizeDurationDays(30, 'days', start)).toBe(30);
-    const entries = listEntryDates(start, 30);
+    const entries = listEntryDates(start, 30, 'days');
     expect(entries).toHaveLength(30);
     expect(entries[0]).toBe('2026-02-15');
     expect(entries[29]).toBe('2026-03-16');
+  });
+
+  it('1 calendar month creates one monthly payment date', () => {
+    const start = '2026-02-15';
+    const entries = listEntryDates(start, 1, 'months');
+    expect(entries).toEqual(['2026-02-15']);
+  });
+
+  it('3 calendar months create three monthly payment dates', () => {
+    const start = '2026-02-15';
+    expect(listEntryDates(start, 3, 'months')).toEqual([
+      '2026-02-15',
+      '2026-03-15',
+      '2026-04-15',
+    ]);
   });
 
   it('1 calendar month from Feb 15 ends Mar 15 (29 inclusive days)', () => {
     const start = '2026-02-15';
     expect(computeEndDate(start, 1, 'months')).toBe('2026-03-15');
     expect(normalizeDurationDays(1, 'months', start)).toBe(29);
-    expect(listEntryDates(start, 29).at(-1)).toBe('2026-03-15');
+    expect(listEntryDates(start, 29, 'days').at(-1)).toBe('2026-03-15');
   });
 
   it('clamps Jan 31 + 1 month to Feb 28 in non-leap year', () => {

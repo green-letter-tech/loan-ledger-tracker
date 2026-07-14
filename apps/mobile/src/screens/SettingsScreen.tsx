@@ -13,6 +13,8 @@ import { REMINDER_FREQUENCY_OPTIONS } from '../constants/reminders';
 import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
+import { ensureNotificationPermissions, syncReminders } from '../services/reminders';
+import { showAlert } from '../utils/confirmAction';
 import type { ThemePreference } from '../theme/types';
 
 const THEME_OPTIONS: ReadonlyArray<{ label: string; value: ThemePreference }> = [
@@ -24,7 +26,7 @@ const THEME_OPTIONS: ReadonlyArray<{ label: string; value: ThemePreference }> = 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
 const SETTINGS_EXTRA_TIME = '09:00';
 
-export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
+export function SettingsScreen({ navigation }: TabScreenProps<'Settings'>) {
   const { tokens, themePreference, setThemePreference } = useTheme();
   const repository = useRepository();
 
@@ -46,9 +48,44 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
 
   const persistSettings = useCallback(
     async (patch: Parameters<typeof repository.updateSettings>[0]) => {
-      await repository.updateSettings(patch);
+      return repository.updateSettings(patch);
     },
     [repository],
+  );
+
+  const syncReminderSchedule = useCallback(
+    async (settings: Awaited<ReturnType<typeof repository.updateSettings>>) => {
+      const result = await syncReminders({
+        remindersEnabled: settings.remindersEnabled,
+        reminderFrequency: settings.reminderFrequency,
+        reminderTimes: settings.reminderTimes,
+      });
+
+      if (result.permissionDenied) {
+        const disabled = await repository.updateSettings({ remindersEnabled: false });
+        setRemindersEnabled(false);
+        showAlert(
+          'Notifications blocked',
+          'Enable notifications in system settings to use daily reminders.',
+        );
+        return disabled;
+      }
+
+      return settings;
+    },
+    [repository],
+  );
+
+  const persistAndSyncReminders = useCallback(
+    async (patch: Parameters<typeof repository.updateSettings>[0]) => {
+      const updated = await persistSettings(patch);
+      setRemindersEnabled(updated.remindersEnabled);
+      setFrequency(updated.reminderFrequency);
+      setReminderTimes(updated.reminderTimes);
+      await syncReminderSchedule(updated);
+      return updated;
+    },
+    [persistSettings, syncReminderSchedule],
   );
 
   const handleThemeChange = useCallback(
@@ -61,33 +98,44 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
 
   const handleRemindersEnabled = useCallback(
     async (enabled: boolean) => {
+      if (enabled) {
+        const granted = await ensureNotificationPermissions();
+        if (!granted) {
+          showAlert(
+            'Notifications blocked',
+            'Allow notifications to enable daily collection reminders.',
+          );
+          return;
+        }
+      }
+
       setRemindersEnabled(enabled);
-      await persistSettings({ remindersEnabled: enabled });
+      await persistAndSyncReminders({ remindersEnabled: enabled });
     },
-    [persistSettings],
+    [persistAndSyncReminders],
   );
 
   const handleFrequencyChange = useCallback(
     async (value: ReminderFrequency) => {
       setFrequency(value);
-      await persistSettings({ reminderFrequency: value });
+      await persistAndSyncReminders({ reminderFrequency: value });
     },
-    [persistSettings],
+    [persistAndSyncReminders],
   );
 
   const handleAddTime = useCallback(async () => {
     const next = [...reminderTimes, SETTINGS_EXTRA_TIME];
     setReminderTimes(next);
-    await persistSettings({ reminderTimes: next });
-  }, [persistSettings, reminderTimes]);
+    await persistAndSyncReminders({ reminderTimes: next });
+  }, [persistAndSyncReminders, reminderTimes]);
 
   const handleChangeTime = useCallback(
     async (index: number, time24: string) => {
       const next = reminderTimes.map((time, i) => (i === index ? time24 : time));
       setReminderTimes(next);
-      await persistSettings({ reminderTimes: next });
+      await persistAndSyncReminders({ reminderTimes: next });
     },
-    [persistSettings, reminderTimes],
+    [persistAndSyncReminders, reminderTimes],
   );
 
   const handleRemoveTime = useCallback(
@@ -97,9 +145,9 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
       }
       const next = reminderTimes.filter((_, i) => i !== index);
       setReminderTimes(next);
-      await persistSettings({ reminderTimes: next });
+      await persistAndSyncReminders({ reminderTimes: next });
     },
-    [persistSettings, reminderTimes],
+    [persistAndSyncReminders, reminderTimes],
   );
 
   return (
@@ -214,7 +262,7 @@ export function SettingsScreen(_props: TabScreenProps<'Settings'>) {
               icon="shield-checkmark-outline"
               title="Privacy policy"
               pad
-              onPress={() => {}}
+              onPress={() => navigation.navigate('PrivacyPolicy')}
               right={<Ionicons name="chevron-forward" size={18} color={tokens.textFaint} />}
             />
             <View style={[styles.localDataRow, { borderTopColor: tokens.borderSoft }]}>

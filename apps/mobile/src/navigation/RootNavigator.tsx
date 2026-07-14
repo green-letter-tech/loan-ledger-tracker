@@ -7,6 +7,7 @@ import { LoanDetailScreen } from '../screens/LoanDetailScreen';
 import { LoaneeDetailScreen } from '../screens/LoaneeDetailScreen';
 import { LoaneeFormScreen } from '../screens/LoaneeFormScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
 import { TabNavigator } from './TabNavigator';
 import type { RootStackParamList } from './types';
 
@@ -36,19 +37,32 @@ export function RootNavigator({ onboarded }: RootNavigatorProps) {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Main" component={TabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen name="LoanDetail" component={LoanDetailScreen} options={{ title: 'Loan' }} />
+      <Stack.Screen name="LoanDetail" component={LoanDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="CreateLoan"
         component={CreateLoanScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="LoaneeForm" component={LoaneeFormScreen} options={{ title: 'Loanee' }} />
+      <Stack.Screen
+        name="LoaneeForm"
+        component={LoaneeFormScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="LoaneeDetail"
         component={LoaneeDetailScreen}
-        options={{ title: 'Loanee' }}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen name="ExtendLoan" component={ExtendLoanScreen} options={{ title: 'Extend' }} />
+      <Stack.Screen
+        name="ExtendLoan"
+        component={ExtendLoanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{ title: 'Privacy policy' }}
+      />
     </Stack.Navigator>
   );
 }
