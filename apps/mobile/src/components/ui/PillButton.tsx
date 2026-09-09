@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -22,13 +23,17 @@ interface PillButtonProps {
   size?: PillButtonSize;
   full?: boolean;
   disabled?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
   style?: StyleProp<ViewStyle>;
 }
 
-const SIZE_STYLES: Record<PillButtonSize, { height: number; fontSize: number; padH: number }> = {
-  lg: { height: 54, fontSize: 16.5, padH: 24 },
-  md: { height: 46, fontSize: 15, padH: 24 },
-  sm: { height: 38, fontSize: 13.5, padH: 16 },
+const SIZE_STYLES: Record<
+  PillButtonSize,
+  { height: number; fontSize: number; padH: number; iconSize: number }
+> = {
+  lg: { height: 54, fontSize: 16.5, padH: 24, iconSize: 19 },
+  md: { height: 46, fontSize: 15, padH: 24, iconSize: 18 },
+  sm: { height: 38, fontSize: 13.5, padH: 16, iconSize: 17 },
 };
 
 export function PillButton({
@@ -38,10 +43,12 @@ export function PillButton({
   size = 'lg',
   full = false,
   disabled = false,
+  icon,
   style,
 }: PillButtonProps) {
   const { tokens } = useTheme();
   const sizeStyle = SIZE_STYLES[size];
+  const contentColor = getLabelColor(variant, tokens);
 
   const shell: ViewStyle = {
     height: sizeStyle.height,
@@ -50,21 +57,26 @@ export function PillButton({
     width: full ? '100%' : undefined,
     alignSelf: full ? 'stretch' : 'flex-start',
     opacity: disabled ? 0.45 : 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   };
 
   const label = (
-    <Text
-      style={{
-        fontSize: sizeStyle.fontSize,
-        fontWeight: '700',
-        letterSpacing: -0.2,
-        color: getLabelColor(variant, tokens),
-      }}
-    >
-      {children}
-    </Text>
+    <>
+      {icon ? <Ionicons name={icon} size={sizeStyle.iconSize} color={contentColor} /> : null}
+      <Text
+        style={{
+          fontSize: sizeStyle.fontSize,
+          fontWeight: '700',
+          letterSpacing: -0.2,
+          color: contentColor,
+        }}
+      >
+        {children}
+      </Text>
+    </>
   );
 
   return (

@@ -24,6 +24,7 @@ export interface ThemeTokens {
   greenTint: string;
   amberTint: string;
   redTint: string;
+  barTrack: string;
   onGrad: string;
   scrim: string;
   gradPrimary: readonly [string, string];
@@ -64,6 +65,7 @@ export const lightTokens: ThemeTokens = {
   greenTint: '#D8F7E6',
   amberTint: '#FFEBCA',
   redTint: '#FFE5E1',
+  barTrack: '#AEB6C2',
   onGrad: '#FFFFFF',
   scrim: 'rgba(25,32,41,0.45)',
   gradPrimary: ['#3681D7', '#00A67C'],
@@ -94,6 +96,7 @@ export const darkTokens: ThemeTokens = {
   greenTint: '#123626',
   amberTint: '#432E08',
   redTint: '#47211D',
+  barTrack: '#6B7480',
   onGrad: '#FFFFFF',
   scrim: 'rgba(0,0,0,0.6)',
   gradPrimary: ['#3972BC', '#008A67'],

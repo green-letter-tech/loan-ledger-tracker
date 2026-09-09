@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../hooks/useTheme';
 import { CalculatorScreen } from '../screens/CalculatorScreen';
@@ -40,6 +41,8 @@ function TabLabel({ label, focused }: { label: string; focused: boolean }) {
 
 export function TabNavigator() {
   const { tokens } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom;
 
   return (
     <Tab.Navigator
@@ -54,8 +57,9 @@ export function TabNavigator() {
             backgroundColor: tokens.bgElev,
             borderTopColor: tokens.border,
             borderTopWidth: StyleSheet.hairlineWidth,
-            paddingTop: 4,
-            height: 60,
+            paddingTop: 6,
+            paddingBottom: bottomInset > 0 ? bottomInset : 8,
+            height: 60 + bottomInset,
           },
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons

@@ -53,4 +53,21 @@ describe('extendLoan', () => {
       additionalDays: 20,
     });
   });
+
+  it('previews custom-total extension spread over the new days', () => {
+    const preview = previewExtendLoan({
+      endDate: '2026-07-25',
+      dailyExpected: 21,
+      extensionDays: 20,
+      mode: 'custom',
+      outstanding: 320,
+      customTotal: 500,
+    });
+
+    expect(preview).toEqual({
+      newEndDate: '2026-08-14',
+      newDailyExpected: 25,
+      additionalDays: 20,
+    });
+  });
 });

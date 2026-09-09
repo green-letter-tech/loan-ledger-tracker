@@ -35,8 +35,7 @@ export function BarChartWeek({ data, height = 132 }: BarChartWeekProps) {
                   styles.barExpected,
                   {
                     height: expectedHeight,
-                    backgroundColor: tokens.surfaceSunken,
-                    borderColor: tokens.border,
+                    backgroundColor: tokens.barTrack,
                   },
                 ]}
               />
@@ -79,8 +78,6 @@ const styles = StyleSheet.create({
   },
   barExpected: {
     width: '38%',
-    borderWidth: 1,
-    borderBottomWidth: 0,
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
   },

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
   computeOutstandingBalance,
+  computeRecalculateDaily,
   formatINR,
   previewExtendLoan,
   type ExtendLoanMode,
@@ -15,6 +16,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,8 +42,14 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
   const [partialDays, setPartialDays] = useState(0);
   const [addDays, setAddDays] = useState(20);
   const [mode, setMode] = useState<ExtendLoanMode>('keep_daily');
+  const [customTotal, setCustomTotal] = useState('');
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
+
+  const customTotalValue = useMemo(() => {
+    const parsed = parseFloat(customTotal);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  }, [customTotal]);
 
   const loadLoan = useCallback(async () => {
     setLoading(true);
@@ -84,17 +92,23 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
       extensionDays: addDays,
       mode,
       outstanding,
+      customTotal: customTotalValue,
     });
-  }, [addDays, loan, mode, outstanding]);
+  }, [addDays, loan, mode, outstanding, customTotalValue]);
 
   const handleConfirm = useCallback(async () => {
     if (!loan || addDays <= 0) {
       return;
     }
 
+    if (mode === 'custom' && customTotalValue <= 0) {
+      showAlert('Enter an amount', 'Please enter a total amount for the extension.');
+      return;
+    }
+
     setConfirming(true);
     try {
-      await repository.extendLoan(loanId, addDays, mode);
+      await repository.extendLoan(loanId, addDays, mode, customTotalValue);
       navigation.replace('LoanDetail', { loanId });
     } catch (caught: unknown) {
       const message = caught instanceof Error ? caught.message : 'Could not extend loan';
@@ -102,7 +116,7 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
     } finally {
       setConfirming(false);
     }
-  }, [addDays, loan, loanId, mode, navigation, repository]);
+  }, [addDays, customTotalValue, loan, loanId, mode, navigation, repository]);
 
   if (loading) {
     return (
@@ -129,7 +143,12 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
     );
   }
 
-  const recalcDaily = preview?.newDailyExpected ?? loan.dailyExpected;
+  const recalcDaily =
+    addDays > 0 ? computeRecalculateDaily(outstanding, addDays) : loan.dailyExpected;
+  const customDaily =
+    addDays > 0 && customTotalValue > 0
+      ? computeRecalculateDaily(customTotalValue, addDays)
+      : 0;
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
@@ -223,6 +242,32 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
             onPress={() => setMode('recalculate')}
             tokens={tokens}
           />
+          <ExtendChoiceCard
+            active={mode === 'custom'}
+            title="Custom amount"
+            value={customDaily > 0 ? `${formatINR(customDaily)}/day` : 'Enter total'}
+            subtitle="Enter a total amount to spread evenly over the new days"
+            onPress={() => setMode('custom')}
+            tokens={tokens}
+          />
+          {mode === 'custom' ? (
+            <View
+              style={[
+                styles.customInputWrap,
+                { backgroundColor: tokens.surface, borderColor: tokens.blue },
+              ]}
+            >
+              <Text style={[styles.customCurrency, { color: tokens.textFaint }]}>₹</Text>
+              <TextInput
+                value={customTotal}
+                onChangeText={setCustomTotal}
+                placeholder="Total amount"
+                placeholderTextColor={tokens.textFaint}
+                keyboardType="decimal-pad"
+                style={[styles.customInput, { color: tokens.text }]}
+              />
+            </View>
+          ) : null}
         </View>
 
         {preview ? (
@@ -253,7 +298,9 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
         <PillButton
           variant="primary"
           full
-          disabled={confirming || addDays <= 0}
+          disabled={
+            confirming || addDays <= 0 || (mode === 'custom' && customTotalValue <= 0)
+          }
           onPress={() => void handleConfirm()}
         >
           {confirming ? 'Extending…' : 'Confirm extension'}
@@ -447,6 +494,24 @@ const styles = StyleSheet.create({
   },
   choiceList: {
     gap: 11,
+  },
+  customInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 54,
+  },
+  customCurrency: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  customInput: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '700',
   },
   choiceCard: {
     flexDirection: 'row',

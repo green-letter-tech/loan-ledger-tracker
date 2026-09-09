@@ -3,6 +3,7 @@ export {
   computeOutstandingBalance,
   computeRecalculateDaily,
   previewExtendLoan,
+  resolveExtendDaily,
 } from './extendLoan';
 export type { ExtendLoanPreview, ExtendLoanPreviewInput } from './extendLoan';
 export { deriveDailyEntryStatus } from './entryStatus';

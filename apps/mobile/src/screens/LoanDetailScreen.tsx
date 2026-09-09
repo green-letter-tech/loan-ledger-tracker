@@ -371,6 +371,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
                   key={entry.id}
                   entry={entry}
                   last={index === filteredHistory.length - 1}
+                  isFuture={entry.entryDate > todayIso}
                   onPress={() => setSheetEntry(entry)}
                   tokens={tokens}
                 />
@@ -430,21 +431,24 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
 interface HistoryDayRowProps {
   entry: DailyEntry;
   last: boolean;
+  isFuture: boolean;
   onPress: () => void;
   tokens: ThemeTokens;
 }
 
-function HistoryDayRow({ entry, last, onPress, tokens }: HistoryDayRowProps) {
+function HistoryDayRow({ entry, last, isFuture, onPress, tokens }: HistoryDayRowProps) {
   const isPartial = entry.status === 'partial';
   const pill = dailyStatusToPill(entry.status);
-  const iconBg =
-    entry.status === 'paid'
+  const iconBg = isFuture
+    ? tokens.surfaceSunken
+    : entry.status === 'paid'
       ? tokens.greenTint
       : entry.status === 'partial'
         ? tokens.amberTint
         : tokens.surfaceSunken;
-  const iconColor =
-    entry.status === 'paid'
+  const iconColor = isFuture
+    ? tokens.textFaint
+    : entry.status === 'paid'
       ? tokens.green
       : entry.status === 'partial'
         ? tokens.amber
@@ -452,14 +456,18 @@ function HistoryDayRow({ entry, last, onPress, tokens }: HistoryDayRowProps) {
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={isFuture ? undefined : onPress}
+      disabled={isFuture}
       style={[
         styles.historyRow,
+        isFuture && styles.historyRowFuture,
         !last && { borderBottomWidth: 1, borderBottomColor: tokens.borderSoft },
       ]}
     >
       <View style={[styles.historyIcon, { backgroundColor: iconBg }]}>
-        {entry.status === 'paid' ? (
+        {isFuture ? (
+          <Ionicons name="calendar-outline" size={16} color={iconColor} />
+        ) : entry.status === 'paid' ? (
           <Ionicons name="checkmark" size={17} color={iconColor} />
         ) : entry.status === 'partial' ? (
           <Ionicons name="cash-outline" size={17} color={iconColor} />
@@ -473,10 +481,14 @@ function HistoryDayRow({ entry, last, onPress, tokens }: HistoryDayRowProps) {
         </Text>
         <Text style={[styles.historyExpected, { color: tokens.textFaint }]}>
           Expected {formatINR(entry.expectedAmount)}
-          {isPartial ? ` · paid ${formatINR(entry.receivedAmount)}` : ''}
+          {isPartial && !isFuture ? ` · paid ${formatINR(entry.receivedAmount)}` : ''}
         </Text>
       </View>
-      {isPartial ? (
+      {isFuture ? (
+        <View style={[styles.scheduledTag, { backgroundColor: tokens.surfaceSunken }]}>
+          <Text style={[styles.scheduledText, { color: tokens.textFaint }]}>Scheduled</Text>
+        </View>
+      ) : isPartial ? (
         <Text style={[styles.historyPartialAmount, { color: tokens.amber }]}>
           {formatINR(entry.receivedAmount)} / {formatINR(entry.expectedAmount)}
         </Text>
@@ -714,6 +726,18 @@ const styles = StyleSheet.create({
     gap: 13,
     paddingHorizontal: 16,
     paddingVertical: 13,
+  },
+  historyRowFuture: {
+    opacity: 0.6,
+  },
+  scheduledTag: {
+    paddingHorizontal: 11,
+    paddingVertical: 4,
+    borderRadius: 99,
+  },
+  scheduledText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   historyIcon: {
     width: 34,

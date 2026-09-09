@@ -11,7 +11,7 @@ export type ReminderFrequency =
   | 'three_times_daily'
   | 'custom';
 
-export type ExtendLoanMode = 'keep_daily' | 'recalculate';
+export type ExtendLoanMode = 'keep_daily' | 'recalculate' | 'custom';
 
 export interface OwnerSettings {
   ownerId: string;
@@ -139,7 +139,12 @@ export interface LoanRepository {
     receivedAmount: number,
   ): Promise<DailyEntry>;
 
-  extendLoan(loanId: string, days: number, mode: ExtendLoanMode): Promise<Loan>;
+  extendLoan(
+    loanId: string,
+    days: number,
+    mode: ExtendLoanMode,
+    customTotal?: number,
+  ): Promise<Loan>;
   closeLoan(loanId: string): Promise<Loan>;
 
   getDashboardStats(): Promise<DashboardStats>;

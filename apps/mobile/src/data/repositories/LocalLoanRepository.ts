@@ -3,7 +3,7 @@ import {
   buildPaymentSchedule,
   calculateLoan,
   computeOutstandingBalance,
-  computeRecalculateDaily,
+  resolveExtendDaily,
   deriveDailyEntryStatus,
   formatISODateLocal,
   type CreateLoanInput,
@@ -284,7 +284,12 @@ export class LocalLoanRepository implements LoanRepository {
     return mapDailyEntry(updated!);
   }
 
-  async extendLoan(loanId: string, days: number, mode: ExtendLoanMode): Promise<Loan> {
+  async extendLoan(
+    loanId: string,
+    days: number,
+    mode: ExtendLoanMode,
+    customTotal?: number,
+  ): Promise<Loan> {
     if (days <= 0) {
       throw new Error('Extension days must be positive');
     }
@@ -298,12 +303,13 @@ export class LocalLoanRepository implements LoanRepository {
     }
 
     const entries = await this.getDailyEntries(loanId);
-    let newExpected = loan.dailyExpected;
-
-    if (mode === 'recalculate') {
-      const outstanding = computeOutstandingBalance(entries);
-      newExpected = computeRecalculateDaily(outstanding, days);
-    }
+    const newExpected = resolveExtendDaily({
+      mode,
+      dailyExpected: loan.dailyExpected,
+      extensionDays: days,
+      outstanding: computeOutstandingBalance(entries),
+      customTotal,
+    });
 
     const newDates: string[] = [];
     for (let i = 1; i <= days; i += 1) {

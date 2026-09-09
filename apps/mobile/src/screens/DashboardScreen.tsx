@@ -205,6 +205,7 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
               variant="primary"
               size="md"
               full
+              icon="calculator"
               onPress={() => navigation.navigate('Calculator')}
               style={styles.quickActionPrimary}
             >
@@ -213,6 +214,7 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
             <PillButton
               variant="outline"
               size="md"
+              icon="add"
               onPress={() => navigation.navigate('LoaneeForm', {})}
             >
               Loanee
@@ -257,7 +259,7 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
                 </Text>
               </View>
               <View style={styles.barLegend}>
-                <LegendSwatch label="Expected" color={tokens.surfaceSunken} border={tokens.border} />
+                <LegendSwatch label="Expected" color={tokens.barTrack} />
                 <LegendSwatch label="Received" color={tokens.green} />
               </View>
             </View>
