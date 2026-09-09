@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "LendLedger",
+    "slug": "lendledger",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "lendledger",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3B66F5"
+    },
+    "android": {
+      "package": "com.greenletter.lendledger",
+      "versionCode": 1,
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#3B66F5"
+      }
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png"
+        }
+      ],
+      "./plugins/withIosLocalNotificationsOnly.js"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.greenletter.lendledger"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "49810df2-a88c-44e9-b7c1-7d7152db0f6b"
+      }
+    }
+  }
+}
