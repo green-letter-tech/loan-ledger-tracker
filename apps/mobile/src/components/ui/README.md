@@ -1,6 +1,6 @@
 # UI primitives
 
-React Native components ported from `Lend Ledger/app/lib.jsx`. All colors come from `useTheme().tokens` — screens must not hardcode hex values.
+React Native components ported from `design/app/lib.jsx`. All colors come from `useTheme().tokens` — screens must not hardcode hex values.
 
 ## Components
 

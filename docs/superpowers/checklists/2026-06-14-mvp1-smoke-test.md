@@ -20,8 +20,10 @@ Run on **Android device or emulator** (primary ship target). Repeat key flows on
 - [ ] Calculator shows live ₹ outputs (canonical: 100 INR, 1%/day, 50 days → ₹3/day)
 - [ ] **Save as loan** opens create-loan flow with terms prefilled
 - [ ] Can add or select a loanee and create the loan
+- [ ] Tapping **Start date** opens the calendar pop-up; month arrows and **Today** work; picked date shows in the field
 - [ ] Loan detail opens after creation
 - [ ] Loan has correct number of daily entries (50 for 50-day loan)
+- [ ] Monthly / yearly term creates one entry per period (e.g. 3 months → 3 entries)
 
 ## 3. Daily tracking
 
@@ -32,14 +34,17 @@ Run on **Android device or emulator** (primary ship target). Repeat key flows on
 - [ ] Partial amount marks day as **Partial**
 - [ ] Amount ≥ expected marks day as **Paid** (overpayment allowed)
 - [ ] Overpayment credit banner appears when received > expected on paid days
-- [ ] History filter works: All | Paid | Unpaid | Partial
+- [ ] History filter works: All | Paid | Unpaid | Partial (Paid newest-first; others oldest-first)
 - [ ] Can backfill an older day via custom amount
+- [ ] Future-dated rows are dimmed, tagged **Scheduled**, and not tappable
+- [ ] Pinned next-due card still lets you record tomorrow's payment early; it then appears in **Paid**
 
 ## 4. Extend loan
 
 - [ ] Extend loan screen shows unpaid/partial summary and balance
 - [ ] **Keep same daily** adds entries at original daily amount
 - [ ] **Recalculate daily** spreads remaining balance over new days
+- [ ] **Custom amount** — enter a total; preview shows total ÷ days; confirm disabled for empty / zero / non-numeric
 - [ ] Preview shows new end date and daily amount before confirm
 - [ ] After extend, loan status is **extended** and new days appear in history
 
@@ -63,13 +68,14 @@ Run on **Android device or emulator** (primary ship target). Repeat key flows on
 
 - [ ] Four stat cards match expectations (loaned, received, outstanding, active count)
 - [ ] Donut chart reflects outstanding by loanee
-- [ ] Weekly bar chart shows expected vs received
+- [ ] Weekly bar chart shows expected vs received — **Expected** bars clearly visible against the card in both Light and Dark
 - [ ] 30-day collections line chart renders
 - [ ] Active loans list (top 3) opens loan detail on tap
-- [ ] Quick actions: New calculation → Calculator; Loanee → add form
+- [ ] Quick actions: **New calculation** (calculator icon) → Calculator; **Loanee** (+ icon) → add form
 
 ## 8. Settings & theme
 
+- [ ] Bottom tab bar (Home, Calculator, Loanees, Settings) fully visible — labels not cropped on Android gesture-navigation devices
 - [ ] Theme Light / Dark / System applies immediately
 - [ ] Kill app and reopen → theme preference persists
 - [ ] Reminder toggle off cancels scheduled notifications

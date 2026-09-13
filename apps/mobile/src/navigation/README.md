@@ -7,7 +7,7 @@ React Navigation shell for LendLedger MVP1.
 - **Root stack** (`RootNavigator`) — onboarding gate + push screens
 - **Bottom tabs** (`TabNavigator`) — Home, Calculator, Loanees, Settings
 
-Active tab uses `tokens.blue` text (no filled pill), matching `Lend Ledger/LendLedger.html`.
+Active tab uses `tokens.blue` text (no filled pill), matching `design/LendLedger.html`. Tab bar height and bottom padding follow `useSafeAreaInsets()` so Android gesture-nav devices don't crop the labels.
 
 ## First launch
 

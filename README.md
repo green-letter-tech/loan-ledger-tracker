@@ -1,67 +1,53 @@
 # LendLedger
 
-Cross-platform (Web and Android) lending tracker for SMBs — daily repayment, INR, local-first MVP.
+Daily-repayment lending tracker for small lenders in India. Local-first (SQLite on device), INR, light/dark, Android-first with iOS and web builds from the same Expo codebase.
 
-## UI design (canonical)
+**Canonical example:** ₹100 lent at 1%/day for 50 days → ₹150 total → **₹3/day**.
 
-The approved semi-final UI lives in **`Lend Ledger/`**. This is the reference for Expo implementation.
+## Repository map
 
-```bash
-cd "Lend Ledger"
-./start-preview.sh
-```
+| Path | What it is |
+|------|------------|
+| `apps/mobile/` | Expo app (`@lendledger/mobile`) — screens, navigation, SQLite repository, reminders |
+| `packages/core/` | `@lendledger/core` — pure TypeScript loan math, schedules, extend logic, INR formatting (Vitest) |
+| `design/` | **Canonical UI handoff (v2)** — interactive HTML/JSX preview + `tokens.css` + screenshots |
+| `docs/` | Spec, implementation plan, smoke-test checklist, release docs. **Start at `docs/README.md`** |
+| `archive/` | Project history: early planning, Stitch prototype, handoff v1, retired mobile code |
 
-Open **http://localhost:8765/LendLedger.html** in your browser (Mobile + Light/Dark toggles, Tweaks panel).
-
-Design tokens: `Lend Ledger/app/tokens.css`
-
-## Product spec
-
-`docs/superpowers/specs/2026-05-25-lendledger-design.md`
-
-## Implementation plan (MVP1)
-
-`docs/superpowers/plans/2026-06-06-lendledger-mvp1.md` — step-by-step build guide (foundation-first, Play Store publish)
-
-## Archive
-
-Earlier Stitch prototypes and reference screenshots are in **`archive/`** (not used for implementation).
-
-## Status
-
-- **UI design:** semi-final (`Lend Ledger/`)
-- **MVP1 implementation:** in progress on `feature/UI_implementation`
-  - ✅ **Task 1** — monorepo workspace root (`package.json`, `tsconfig.base.json`)
-  - ✅ **Task 2** — Expo app scaffold (`apps/mobile`, `npm run mobile:web`)
-  - ✅ **Task 3** — `packages/core` setup (`npm run test:core`)
-  - ✅ **Task 4** — loan calculator + INR formatters (9 unit tests; see `packages/core/README.md`)
-  - ✅ **Task 5** — design tokens + ThemeProvider
-  - ✅ **Task 6** — UI primitives (Card, PillButton, Avatar, … — see `apps/mobile/src/components/ui/`)
-  - ✅ **Task 7** — SQLite schema & migrations (`apps/mobile/src/data/db/`)
-  - ✅ **Task 8** — LoanRepository + LocalLoanRepository (`apps/mobile/src/data/repositories/`)
-  - ✅ **Task 9** — Tab + stack navigation (`apps/mobile/src/navigation/`)
-  - ✅ **Task 10** — Onboarding flow (welcome + reminders)
-  - ✅ **Task 11** — Settings screen (theme, reminders, about)
-  - ✅ **Task 12** — Calculator screen (live `@lendledger/core` math)
-  - ✅ **Task 13** — Create loan flow
-  - ⏳ **Task 14** — Loanees list & form (next)
-- **Play Store MVP:** planned
-
-Progress tracked in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
-
-### Core package (`@lendledger/core`)
-
-Shared loan math and INR formatting — **calendar-aware** loan terms (months/years use device calendar + `startDate`). See `packages/core/README.md`.
+## Quick start
 
 ```bash
-npm run test:core    # 21 unit tests (calculator, dates, format, entryStatus)
-npm run test:mobile  # 13 tests (repository, calculator, create-loan helpers)
+npm install
+npm run mobile            # Expo dev server (press i / a / w)
+npm run mobile:web        # web preview at phone width
+npm run test:core         # 29 unit tests — loan math
+npm run test:mobile       # 39 tests — repository integration + screen helpers
+npm run typecheck
 ```
 
-### Mobile theme preview
+Design preview:
 
 ```bash
-npm run mobile:web   # press w — calculator → save as loan → create flow
+cd design && ./start-preview.sh     # → http://localhost:8765/LendLedger.html
 ```
 
-See `apps/mobile/src/navigation/README.md`. Loan detail UI in Task 15.
+## Status (September 2026)
+
+- **App:** MVP1 feature-complete on `feature/UI_implementation` — onboarding, calculator, create loan (days / months / years), loanees, loan detail with daily tracking, extend (keep / recalculate / custom), close, dashboard with charts, reminders, settings, privacy policy.
+- **Testing:** preview APK shared with first Android testers; feedback round 1 (6 UX fixes) shipped.
+- **Next:** Play Store listing assets (Task 23) → production AAB → internal testing (Task 24). Detailed progress table in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
+- **Not in MVP1:** accounts, cloud sync, multi-device (Track B — see spec §3).
+
+## Architecture in one paragraph
+
+Screens never touch SQLite directly. They call the `LoanRepository` interface (defined in `packages/core`), which `apps/mobile/src/data/repositories/LocalLoanRepository.ts` implements over `expo-sqlite`. All money math lives in `packages/core` and is unit-tested; the app only formats and displays. Colours come from `useTheme().tokens`, which mirror `design/app/tokens.css`. That split is what lets a future cloud repository slot in without touching screens.
+
+## Release
+
+- EAS profiles and commands: `docs/release/eas-setup.md`
+- Privacy policy: `docs/release/privacy-policy.md` (also in-app)
+- Manual QA: `docs/superpowers/checklists/2026-06-14-mvp1-smoke-test.md`
+
+## License
+
+See `LICENSE`.

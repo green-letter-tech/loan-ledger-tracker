@@ -7,9 +7,13 @@ Shared loan math, types, and INR formatting for LendLedger. Used by `apps/mobile
 | Module | Purpose |
 |--------|---------|
 | `calculator.ts` | `calculateLoan()` — flat/simple interest, daily repayment spread |
-| `dates.ts` | Calendar-aware duration, entry dates, rate normalization |
+| `dates.ts` | Calendar-aware duration, entry dates, rate normalization, period labels |
+| `paymentSchedule.ts` | `buildPaymentSchedule()` — one entry per day / month / year with expected amount |
+| `entryStatus.ts` | `deriveDailyEntryStatus()` — paid / partial / unpaid from received vs expected |
+| `extendLoan.ts` | `computeOutstandingBalance()`, `resolveExtendDaily()`, `previewExtendLoan()` — keep / recalculate / custom modes |
 | `format.ts` | `formatINR()` / `groupINR()` — Indian lakh grouping |
 | `types.ts` | Input/output types for loan calculations |
+| `repository-types.ts` | `LoanRepository` interface + domain types (`Loan`, `Loanee`, `DailyEntry`, `DashboardStats`, `OwnerSettings`) shared with the app |
 
 ## Loan formula
 

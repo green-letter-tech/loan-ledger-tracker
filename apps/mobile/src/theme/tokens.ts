@@ -1,5 +1,5 @@
 /**
- * Design tokens ported from `Lend Ledger/app/tokens.css`.
+ * Design tokens ported from `design/app/tokens.css`.
  * oklch values converted to hex for React Native StyleSheet use.
  */
 

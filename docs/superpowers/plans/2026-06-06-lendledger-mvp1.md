@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship LendLedger MVP1 — a local-only Android app on Google Play Store with full daily-loan tracking, dashboard, reminders, and light/dark theme — matching the approved `Lend Ledger/` UI handoff.
+**Goal:** Ship LendLedger MVP1 — a local-only Android app on Google Play Store with full daily-loan tracking, dashboard, reminders, and light/dark theme — matching the approved `design/` UI handoff.
 
 **Architecture:** Foundation-first monorepo. `packages/core` holds loan math, types, and INR formatting (unit-tested). `apps/mobile` is Expo (React Native + Web). Screens call repository interfaces; MVP1 uses `LocalLoanRepository` backed by `expo-sqlite`. No auth or cloud until Track B.
 
@@ -13,9 +13,11 @@
 | Document | Path |
 |----------|------|
 | Product spec | `docs/superpowers/specs/2026-05-25-lendledger-design.md` |
-| Canonical UI handoff | `Lend Ledger/` (`app/tokens.css`, screen JSX files) |
+| Canonical UI handoff | `design/` (v2 — `app/tokens.css`, screen JSX files, `calendar.jsx`) |
+| Previous handoff (v1) | `archive/ui-handoff-v1/` — what Tasks 5–13 were built against |
 | Git branch | `feature/UI_implementation` |
 | Archived Stitch work | `archive/` (reference only) |
+| Story index (blog source) | `docs/README.md` |
 
 ---
 
@@ -29,41 +31,58 @@
 | **4. Calculator with tests** | **Done** (2026-06-06) | `calculateLoan`, INR formatters, 9 unit tests. See `packages/core/README.md`. Local commit `ef9ec82`. |
 | **5. Port design tokens** | **Done** (2026-06-06) | `ThemeProvider`, `useTheme`, theme preview screen. Local commit `0c660c5`. |
 | **6. UI primitives** | **Done** (2026-06-06) | Card, PillButton, Avatar, StatusPill, ProgressBar, Logo + `DevPreviewScreen`. Local commit `355cb91`. |
-| **7. SQLite schema** | **Done** (2026-06-06) | v1 tables, migrations, owner seed. Local commit pending. |
-| 8. Repository | Pending | Next |
-| 9–24 | Pending | See phases below |
+| **7. SQLite schema** | **Done** (2026-06-06) | v1 tables, migrations, owner seed. Commit `52ea09e`. v2 migration (`duration_unit`, `duration_count`) added in Task 13. |
+| **8. Repository** | **Done** (2026-06-07) | `LoanRepository` (core) + `LocalLoanRepository` (expo-sqlite), 14 integration tests. Commit `75b2457`. |
+| **9. Navigation** | **Done** (2026-06-07) | Tab + native-stack shell. Commit `764f2b5`. |
+| **10. Onboarding** | **Done** (2026-06-08) | Welcome + reminders steps. Commit `1ce081d`. |
+| **11. Settings** | **Done** (2026-06-08) | Theme, reminders, about, privacy policy link. Commit `5dd9724`. |
+| **12. Calculator** | **Done** (2026-06-09) | Live `@lendledger/core` math. Commit `667b784`. |
+| **13. Create loan** | **Done** (2026-06-14) | Loanee pick/add, start date, months/years terms, payment schedule. Commit `1cf7e11`. |
+| **14. Loanees** | **Done** (2026-06-14) | List, form, detail, delete-guard. Commit `b7a2d3b`. |
+| **15. Loan detail** | **Done** (2026-06-14) | Hero, pinned next-due row, history filters, custom amount sheet, backfill, overpayment credit. Commit `b7a2d3b`. |
+| **16. Close loan** | **Done** (2026-06-14) | Warning modal with outstanding. Commit `b7a2d3b`. |
+| **17. Extend loan** | **Done** (2026-06-14) | Keep / recalculate modes + core tests. Commit `b7a2d3b`. **Custom-total mode** added 2026-09 (`6a01f86`). |
+| **18. Dashboard** | **Done** (2026-06-14) | Stat cards, donut, weekly bars, 30-day line, active loans. Commit `b7a2d3b`. |
+| **19. Reminders** | **Done** (2026-06-14) | `expo-notifications`, permission flow, presets. Commit `b7a2d3b`. Android device test still to confirm. |
+| **20. Smoke test checklist** | **Done** (2026-06-14) | `docs/superpowers/checklists/2026-06-14-mvp1-smoke-test.md`. Full pass on device pending. |
+| **21. Edge cases** | **Done** (2026-06-14) | Delete-guard, overpayment credit, restart persistence covered by tests + checklist. |
+| **22. EAS setup** | **Done** (2026-06-14) | `eas.json` (dev / preview APK / production AAB), `docs/release/eas-setup.md`, preview APK built and shared via WhatsApp. |
+| **Feedback round 1** | **Done** (2026-09-09) | 6 UX fixes from first testers — see [Post-MVP feedback](#post-mvp-feedback-round-1--2026-09). Commit `6a01f86`. |
+| **Repo cleanup** | **Done** (2026-09-13) | Design → `design/`, dead code → `archive/mobile-unused/`, docs refreshed. |
+| 23. Play Store listing | Pending | **Next** — title, descriptions, screenshots, feature graphic |
+| 24. Build & submit | Pending | Production AAB → Play Console internal testing |
 
 **Workflow:** One task at a time. Test locally before push; user approves GitHub push after UI verification.
 
 ---
 
-## Repository layout (target)
+## Repository layout (as built, 2026-09)
 
 ```
 lend-ledger/
-├── apps/mobile/
-│   ├── app/                    # Expo Router or src/ (decided in Task 1)
+├── apps/mobile/                # Expo app (@lendledger/mobile)
+│   ├── App.tsx                 # bootstrap: repository → theme → navigation
 │   ├── src/
-│   │   ├── components/         # Card, PillButton, Avatar, charts wrappers
-│   │   ├── navigation/         # Tab + stack navigators
-│   │   ├── screens/            # Dashboard, Calculator, Loanees, Settings, stacks
-│   │   ├── theme/              # tokens ported from Lend Ledger/app/tokens.css
-│   │   ├── data/
-│   │   │   ├── db/             # migrations, schema
-│   │   │   └── repositories/   # LocalLoanRepository
-│   │   └── hooks/              # useTheme, useRepository, useReminders
-│   ├── assets/                 # icon.png (LL placeholder), splash
-│   └── app.json
-├── packages/core/
-│   ├── src/
-│   │   ├── calculator.ts
-│   │   ├── format.ts           # formatINR, groupINR
-│   │   ├── dates.ts            # normalize duration/rate to days
-│   │   ├── types.ts
-│   │   └── index.ts
+│   │   ├── components/         # sheets, modals, charts/, ui/ primitives, create-loan/, reminders/
+│   │   ├── navigation/         # RootNavigator (stack) + TabNavigator
+│   │   ├── screens/            # 12 screens + onboarding/ steps
+│   │   ├── theme/              # tokens.ts (ported from design/app/tokens.css), ThemeProvider
+│   │   ├── data/db/            # schema, migrations (v1, v2), client
+│   │   ├── data/repositories/  # LoanRepository factory, LocalLoanRepository (+ tests)
+│   │   ├── services/           # reminders (expo-notifications) + pure scheduling logic
+│   │   ├── utils/              # screen-level pure helpers (+ tests)
+│   │   ├── context/, hooks/, constants/, content/, types/
+│   │   └── test-utils/         # node SQLite shim, createTestRepository
+│   ├── plugins/                # withIosLocalNotificationsOnly (free Apple ID builds)
+│   ├── assets/                 # icon, splash, adaptive icon
+│   ├── app.json · eas.json
+├── packages/core/              # @lendledger/core — pure TS, Vitest
+│   ├── src/                    # calculator, dates, paymentSchedule, entryStatus, extendLoan, format, types, repository-types
 │   └── __tests__/
-├── package.json                # npm workspaces root
-└── Lend Ledger/                # design reference (unchanged)
+├── design/                     # canonical UI handoff v2 (HTML + JSX + tokens.css + screenshots)
+├── docs/                       # spec, plan, checklists, release docs — see docs/README.md
+├── archive/                    # history: early planning, Stitch prototype, handoff v1, unused mobile code
+└── package.json                # npm workspaces root
 ```
 
 ---
@@ -322,7 +341,7 @@ Implement `dates.ts` per spec §7 (`day` = rate as-is; `month` = rate/30; `year`
 
 - [x] **Step 4: Implement `format.ts`**
 
-Ported `groupINR` / `formatINR` from `Lend Ledger/app/lib.jsx` (Indian lakh grouping).
+Ported `groupINR` / `formatINR` from `design/app/lib.jsx` (Indian lakh grouping).
 
 - [x] **Step 5: Run tests — expect PASS**
 
@@ -337,7 +356,7 @@ git commit -m "feat(core): add loan calculator with unit tests"
 
 **Implementation notes (Task 4):**
 
-- **Source of truth for math:** `docs/superpowers/specs/2026-05-25-lendledger-design.md` §7; verified against `Lend Ledger/app/screens-core.jsx` calculator logic.
+- **Source of truth for math:** `docs/superpowers/specs/2026-05-25-lendledger-design.md` §7; verified against `design/app/screens-core.jsx` calculator logic.
 - **`dates.ts`:** Rate: `day` / `month÷30` / `year÷365`. Duration: **calendar-aware** (`computeEndDate`, `listEntryDates`); see README.
 - **`calculator.ts`:** Flat interest; amounts rounded to 2 dp; `dailyExpected` is 0 when `durationDays` is 0.
 - **`format.ts`:** Lakh grouping (`1,50,000`); optional paise display for calculator outputs.
@@ -359,7 +378,7 @@ git commit -m "feat(core): add loan calculator with unit tests"
 - Create: `apps/mobile/src/theme/README.md`
 - Modify: `apps/mobile/App.tsx`
 
-- [x] **Step 1: Map oklch tokens from `Lend Ledger/app/tokens.css`**
+- [x] **Step 1: Map oklch tokens from `design/app/tokens.css`**
 
 Create light and dark token objects:
 
@@ -421,7 +440,7 @@ Run: `npm run mobile:web` → theme preview with Light/Dark/System chips and bra
 | **12** | **Calculator screen** — live ₹ outputs from `@lendledger/core` |
 | **13+** | Create loan, loan detail, dashboard with real data |
 
-Canonical design reference remains `Lend Ledger/` HTML preview until Expo screens reach parity.
+Canonical design reference remains the `design/` HTML preview until Expo screens reach parity.
 
 **Duration / calendar model (updated — calendar-aware):**
 
@@ -449,7 +468,7 @@ Canonical design reference remains `Lend Ledger/` HTML preview until Expo screen
 - Modify: `apps/mobile/App.tsx`
 - Add dep: `expo-linear-gradient`
 
-Port behavior from `Lend Ledger/app/lib.jsx` — match variants: `primary`, `outline`, `green`, `danger`.
+Port behavior from `design/app/lib.jsx` — match variants: `primary`, `outline`, `green`, `danger`.
 
 - [x] **Step 1: Build each primitive with theme tokens (no hardcoded hex in screens)**
 - [x] **Step 2: Storybook optional — skip for MVP1**
@@ -592,7 +611,7 @@ it('createLoan inserts one daily_entry per day', async () => {
 
 - [x] **Step 1: Bottom tabs — Home, Calculator, Loanees, Settings**
 
-Match handoff tab bar: active tab uses `blue` text (not filled pill on mobile — per approved `Lend Ledger` design).
+Match handoff tab bar: active tab uses `blue` text (not filled pill on mobile — per approved `design/` handoff).
 
 - [x] **Step 2: Stack screens**
 
@@ -672,78 +691,79 @@ If `owner_settings.onboarded === 0` → show `OnboardingScreen`; else → tabs.
 
 ## Phase 8 — Loanees
 
-### Task 14: Loanees list & form ← **Next**
+### Task 14: Loanees list & form ✅
 
 **Files:**
 - Create: `apps/mobile/src/screens/LoaneesScreen.tsx`
 - Create: `apps/mobile/src/screens/LoaneeFormScreen.tsx`
 - Create: `apps/mobile/src/screens/LoaneeDetailScreen.tsx`
 
-- [ ] **Step 1: Empty state** (match handoff — illustration + Add loanee CTA)
-- [ ] **Step 2: Populated list** — avatar, name, phone, active loans, outstanding (amber)
-- [ ] **Step 3: Add/edit form** — name (required), phone, notes
-- [ ] **Step 4: Delete blocked when active loans exist**
-- [ ] **Step 5: Loanee detail → list of loans → tap opens LoanDetail**
-- [ ] **Step 6: Commit**
+- [x] **Step 1: Empty state** (match handoff — illustration + Add loanee CTA)
+- [x] **Step 2: Populated list** — avatar, name, phone, active loans, outstanding (amber)
+- [x] **Step 3: Add/edit form** — name (required), phone, notes
+- [x] **Step 4: Delete blocked when active loans exist**
+- [x] **Step 5: Loanee detail → list of loans → tap opens LoanDetail**
+- [x] **Step 6: Commit** — `b7a2d3b`
 
 ---
 
 ## Phase 9 — Loan detail & daily tracking
 
-### Task 15: Loan detail screen
+### Task 15: Loan detail screen ✅
 
 **Files:**
 - Create: `apps/mobile/src/screens/LoanDetailScreen.tsx`
 - Create: `apps/mobile/src/components/CustomAmountSheet.tsx`
 
-- [ ] **Step 1: Hero gradient header** — principal, daily expected, progress bar, outstanding, collected (match `screens-stack2.jsx`)
-- [ ] **Step 2: Today row pinned** — Paid / Unpaid toggles**
-- [ ] **Step 3: History list with filter** — All | Paid | Unpaid | Partial
-- [ ] **Step 4: Tap row → CustomAmountSheet** for partial/overpayment
-- [ ] **Step 5: Overpayment credit display when sum(received) > sum(expected) for paid days**
-- [ ] **Step 6: Backfill — update any past day**
-- [ ] **Step 7: Commit**
+- [x] **Step 1: Hero gradient header** — principal, daily expected, progress bar, outstanding, collected (match `screens-stack2.jsx`)
+- [x] **Step 2: Today row pinned** — Paid / Unpaid toggles (pinned row is the *next due* entry, so early payment is allowed)
+- [x] **Step 3: History list with filter** — All | Paid | Unpaid | Partial (Paid newest-first, others oldest-first)
+- [x] **Step 4: Tap row → CustomAmountSheet** for partial/overpayment
+- [x] **Step 5: Overpayment credit display when sum(received) > sum(expected) for paid days**
+- [x] **Step 6: Backfill — update any past day**
+- [x] **Step 7: Commit** — `b7a2d3b`; future-dated rows locked (“Scheduled”) in `6a01f86`
 
 ---
 
-### Task 16: Close loan
+### Task 16: Close loan ✅
 
 **Files:**
 - Create: `apps/mobile/src/components/CloseLoanModal.tsx`
 
-- [ ] **Step 1: Warning modal with outstanding amount** (match handoff CloseLoanDialog)
-- [ ] **Step 2: Confirm → `repo.closeLoan()` sets status `closed`**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Warning modal with outstanding amount** (match handoff CloseLoanDialog)
+- [x] **Step 2: Confirm → `repo.closeLoan()` sets status `closed`**
+- [x] **Step 3: Commit** — `b7a2d3b`
 
 ---
 
 ## Phase 10 — Extend loan
 
-### Task 17: Extend loan screen
+### Task 17: Extend loan screen ✅
 
 **Files:**
 - Create: `apps/mobile/src/screens/ExtendLoanScreen.tsx`
 
-- [ ] **Step 1: Show unpaid/partial summary + remaining balance**
-- [ ] **Step 2: Input days to add**
-- [ ] **Step 3: Choice cards — Keep same daily vs Recalculate daily**
-- [ ] **Step 4: Preview new end date + daily amount**
-- [ ] **Step 5: Confirm → insert new `daily_entries`, set status `extended`**
+- [x] **Step 1: Show unpaid/partial summary + remaining balance**
+- [x] **Step 2: Input days to add**
+- [x] **Step 3: Choice cards — Keep same daily vs Recalculate daily** (+ **Custom total** added in feedback round 1)
+- [x] **Step 4: Preview new end date + daily amount**
+- [x] **Step 5: Confirm → insert new `daily_entries`, set status `extended`**
 
-Recalculate logic:
+Recalculate logic (`packages/core/src/extendLoan.ts` → `resolveExtendDaily`):
 ```
 remainingBalance = totalExpected - sum(received_amount)
-newDaily = remainingBalance / extensionDays  (if recalculate)
+newDaily = remainingBalance / extensionDays   (recalculate)
+newDaily = customTotal / extensionDays        (custom)
 ```
 
-- [ ] **Step 6: Unit test extend scenarios in `packages/core`**
-- [ ] **Step 7: Commit**
+- [x] **Step 6: Unit test extend scenarios in `packages/core`** — `__tests__/extendLoan.test.ts`
+- [x] **Step 7: Commit** — `b7a2d3b`, custom mode `6a01f86`
 
 ---
 
 ## Phase 11 — Dashboard & charts
 
-### Task 18: Dashboard screen
+### Task 18: Dashboard screen ✅
 
 **Files:**
 - Create: `apps/mobile/src/screens/DashboardScreen.tsx`
@@ -751,30 +771,30 @@ newDaily = remainingBalance / extensionDays  (if recalculate)
 - Create: `apps/mobile/src/components/charts/BarChartWeek.tsx`
 - Create: `apps/mobile/src/components/charts/LineChartCollections.tsx`
 
-- [ ] **Step 1: Four stat cards** — total loaned, received (green), outstanding (amber), active count
-- [ ] **Step 2: Donut — outstanding by loanee** (gifted-charts PieChart)
-- [ ] **Step 3: Bar — expected vs received this week**
-- [ ] **Step 4: Line — cumulative collections last 30 days**
-- [ ] **Step 5: Active loans list → tap LoanDetail**
-- [ ] **Step 6: Empty state when no active loans**
-- [ ] **Step 7: Quick actions — New calculation, Add loanee**
-- [ ] **Step 8: All chart data from `repo.getDashboardStats()` — no hardcoded mock**
-- [ ] **Step 9: Commit**
+- [x] **Step 1: Four stat cards** — total loaned, received (green), outstanding (amber), active count
+- [x] **Step 2: Donut — outstanding by loanee** (gifted-charts PieChart)
+- [x] **Step 3: Bar — expected vs received this week** (`barTrack` token for contrast, feedback round 1)
+- [x] **Step 4: Line — cumulative collections last 30 days** (hand-rolled `react-native-svg`)
+- [x] **Step 5: Active loans list → tap LoanDetail**
+- [x] **Step 6: Empty state when no active loans**
+- [x] **Step 7: Quick actions — New calculation, Add loanee** (icons added in feedback round 1)
+- [x] **Step 8: All chart data from `repo.getDashboardStats()` — no hardcoded mock**
+- [x] **Step 9: Commit** — `b7a2d3b`
 
 ---
 
 ## Phase 12 — Android reminders
 
-### Task 19: Local notifications
+### Task 19: Local notifications ✅ (device test pending)
 
 **Files:**
-- Create: `apps/mobile/src/services/reminders.ts`
+- Create: `apps/mobile/src/services/reminders.ts` (+ pure `remindersLogic.ts` with tests)
 - Modify: `apps/mobile/src/screens/SettingsScreen.tsx`
 
-- [ ] **Step 1: Request Android notification permission on first enable**
-- [ ] **Step 2: Schedule/cancel notifications when settings change**
-- [ ] **Step 3: Copy:** "Update today's collections in LendLedger"
-- [ ] **Step 4: Frequency presets map to notification schedule**
+- [x] **Step 1: Request Android notification permission on first enable**
+- [x] **Step 2: Schedule/cancel notifications when settings change**
+- [x] **Step 3: Copy:** "Update today's collections in LendLedger"
+- [x] **Step 4: Frequency presets map to notification schedule**
 
 | Preset | Behavior |
 |--------|----------|
@@ -783,47 +803,76 @@ newDaily = remainingBalance / extensionDays  (if recalculate)
 | Three times daily | Three fires |
 | Custom | All configured times |
 
-- [ ] **Step 5: Test on Android emulator/device — notification fires at set time**
-- [ ] **Step 6: Web dev — graceful no-op or browser prompt (not ship criteria)**
-- [ ] **Step 7: Commit**
+- [ ] **Step 5: Test on Android emulator/device — notification fires at set time** ← confirm on tester's Pixel
+- [x] **Step 6: Web dev — graceful no-op or browser prompt (not ship criteria)**
+- [x] **Step 7: Commit** — `b7a2d3b`
 
 ---
 
 ## Phase 13 — QA & polish
 
-### Task 20: Manual smoke test checklist
+### Task 20: Manual smoke test checklist ✅ (written; full device pass pending)
 
-- [ ] Fresh install → onboarding → dashboard empty state
-- [ ] Calculator → create loanee → create loan → 50 daily entries exist
-- [ ] Mark today paid, yesterday partial, backfill older day
-- [ ] Extend loan both modes
-- [ ] Close loan with outstanding warning
-- [ ] Dashboard numbers match DB
-- [ ] Theme toggle persists after kill + reopen
+Full checklist: `docs/superpowers/checklists/2026-06-14-mvp1-smoke-test.md`
+
+- [x] Fresh install → onboarding → dashboard empty state
+- [x] Calculator → create loanee → create loan → 50 daily entries exist
+- [x] Mark today paid, yesterday partial, backfill older day
+- [x] Extend loan both modes
+- [x] Close loan with outstanding warning
+- [x] Dashboard numbers match DB
+- [x] Theme toggle persists after kill + reopen
 - [ ] Reminder fires on Android
 
 ---
 
-### Task 21: Light/dark + edge cases
+### Task 21: Light/dark + edge cases ✅
 
-- [ ] Delete loanee with active loan → blocked with message
-- [ ] Custom amount > expected → overpayment credit shown
-- [ ] App restart → all data intact
+- [x] Delete loanee with active loan → blocked with message
+- [x] Custom amount > expected → overpayment credit shown
+- [x] App restart → all data intact
+
+---
+
+## Post-MVP feedback round 1 — 2026-09
+
+First testers (Android Pixel via preview APK, iOS via simulator) reported six issues. All fixed in commit `6a01f86`:
+
+| # | Feedback | Fix |
+|---|----------|-----|
+| 1 | Typing a start date is fiddly | `DatePickerSheet` — in-app month calendar modal, wired into `StartDateField` |
+| 2 | Extending a loan needs a custom amount | Third mode `custom` — total spread evenly over new days (`resolveExtendDaily` in core) |
+| 3 | Bottom tab bar cropped on Android gesture nav | `useSafeAreaInsets` → tab bar height/padding follow device inset |
+| 4 | Home pill buttons lack visual cue | `PillButton` `icon` prop; `calculator` and `add` icons on Home |
+| 5 | "Expected" bars vanish into background in one theme | New `barTrack` token (light `#AEB6C2`, dark `#6B7480`) — matches `design/app/tokens.css --bar-track` |
+| 6 | Users could record payments on future dates | Future history rows dimmed, non-tappable, tagged “Scheduled”; early payment still possible via the pinned next-due card |
+
+Design handoff was bumped to v2 (`design/`) in the same round: adds `calendar.jsx` and the `--bar-track` token.
+
+---
+
+## Repo cleanup — 2026-09-13
+
+- `Lend Ledger 2/` → `design/` (canonical, tracked); `Lend Ledger/` → `archive/ui-handoff-v1/`
+- Unused `DevPreviewScreen`, `StackPlaceholderScreen`, `EmptyState` → `archive/mobile-unused/`
+- `createTestRepository` → `src/test-utils/`; deprecated `splitEntriesByToday` alias removed; unused `expo-device` dropped
+- 189 MB of ignored `node_modules` inside `archive/stitch-prototype-v2` deleted from disk
+- `docs/README.md` added as the story index for the Medium series
 
 ---
 
 ## Phase 14 — Play Store publish
 
-### Task 22: EAS & signing setup
+### Task 22: EAS & signing setup ✅
 
 **Files:**
-- Create: `eas.json`
-- Create: `apps/mobile/eas.json` (or root)
+- Create: `apps/mobile/eas.json`
+- Create: `docs/release/eas-setup.md`
 
-- [ ] **Step 1: Install EAS CLI** — `npm i -g eas-cli`
-- [ ] **Step 2: `eas login` + `eas build:configure`**
-- [ ] **Step 3: Create Android keystore** (EAS managed or upload)
-- [ ] **Step 4: Production profile in `eas.json`**
+- [x] **Step 1: Install EAS CLI** — `npm i -g eas-cli`
+- [x] **Step 2: `eas login` + `eas build:configure`** — project ID in `app.json → extra.eas.projectId`
+- [x] **Step 3: Create Android keystore** (EAS managed)
+- [x] **Step 4: Production profile in `eas.json`** — plus `preview` (APK for sideloading) and `development`
 
 ```json
 {
@@ -835,11 +884,11 @@ newDaily = remainingBalance / extensionDays  (if recalculate)
 }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — `b7a2d3b`
 
 ---
 
-### Task 23: Play Store listing assets
+### Task 23: Play Store listing assets ← **Next**
 
 **Files:**
 - Create: `docs/release/play-store-listing.md`
@@ -851,7 +900,7 @@ newDaily = remainingBalance / extensionDays  (if recalculate)
 - [ ] **Step 4: Screenshots** — capture light + dark from Android (phone + 7" tablet if required)
 - [ ] **Step 5: Feature graphic** — 1024×500 with LL branding
 - [ ] **Step 6: App icon** — replace LL placeholder if ready; else ship placeholder
-- [ ] **Step 7: Privacy policy** — disclose local-only storage, no account, no data collection beyond device
+- [x] **Step 7: Privacy policy** — `docs/release/privacy-policy.md` + in-app `PrivacyPolicyScreen` (local-only storage, no account, no collection)
 - [ ] **Step 8: Content rating questionnaire** — finance/utility, no user-generated public content
 - [ ] **Step 9: Commit docs**
 

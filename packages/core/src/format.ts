@@ -1,4 +1,4 @@
-/** Indian lakh/crore grouping. Ported from `Lend Ledger/app/lib.jsx`. */
+/** Indian lakh/crore grouping. Ported from `design/app/lib.jsx`. */
 export function groupINR(n: number): string {
   const neg = n < 0;
   const s = Math.abs(Math.round(n)).toString();

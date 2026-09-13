@@ -1,0 +1,39 @@
+---
+description: Save user-attached conversation images as PNG files under docs/
+alwaysApply: true
+---
+
+# Save Attached Images to docs/
+
+When the user attaches one or more images in a conversation, save each image to the project under `docs/` as a `.png` file.
+
+## When to apply
+
+- User attaches an image (screenshot, diagram, mockup, photo, etc.)
+- User references an attached image and expects it persisted in the repo
+
+## Save location and format
+
+- **Directory:** `docs/` (create it if missing)
+- **Format:** `.png` only
+- **Naming:** Use a short, descriptive kebab-case name derived from the image content or the user's context (e.g. `loan-dashboard-mockup.png`, `payment-flow-diagram.png`). If unclear, use `attached-image-YYYY-MM-DD-HHmmss.png`.
+
+## Workflow
+
+1. Read the attached image from the conversation.
+2. Write it to `docs/<descriptive-name>.png`.
+3. If the source is not PNG, convert and save as PNG before writing.
+4. Do not overwrite an existing file without asking unless the user explicitly wants a replacement.
+5. After saving, tell the user the saved path(s) in your response.
+
+## Examples
+
+```
+User attaches a dashboard screenshot
+→ Save as docs/dashboard-overview.png
+```
+
+```
+User attaches two wireframes in one message
+→ Save as docs/borrower-list-wireframe.png and docs/loan-detail-wireframe.png
+```

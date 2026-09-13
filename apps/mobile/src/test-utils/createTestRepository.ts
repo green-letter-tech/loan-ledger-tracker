@@ -1,8 +1,8 @@
 import { deleteDatabaseSync, openDatabaseAsync } from 'expo-sqlite';
 
-import { runMigrations, seedDefaultOwner } from '../db/migrations';
-import { createId } from '../db/uuid';
-import { LocalLoanRepository } from './LocalLoanRepository';
+import { runMigrations, seedDefaultOwner } from '../data/db/migrations';
+import { createId } from '../data/db/uuid';
+import { LocalLoanRepository } from '../data/repositories/LocalLoanRepository';
 
 /** Isolated DB for repository integration tests. */
 export async function createTestRepository(): Promise<TestLoanRepository> {

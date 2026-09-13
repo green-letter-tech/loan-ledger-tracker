@@ -6,7 +6,7 @@ Design tokens and theme context for LendLedger Expo app.
 
 | File | Role |
 |------|------|
-| `tokens.ts` | Light/dark color palettes (hex), radii, gradient stops — ported from `Lend Ledger/app/tokens.css` |
+| `tokens.ts` | Light/dark color palettes (hex), radii, gradient stops — ported from `design/app/tokens.css` (incl. `barTrack` for chart contrast) |
 | `types.ts` | `ThemePreference` (`light` \| `dark` \| `system`) |
 | `ThemeProvider.tsx` | React context; resolves system appearance via `useColorScheme` |
 | `../hooks/useTheme.ts` | Hook for screens and UI primitives |

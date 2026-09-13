@@ -8,7 +8,7 @@ import { LocalLoanRepository } from '../LocalLoanRepository';
 import {
   createTestRepository,
   type TestLoanRepository,
-} from '../createTestRepository';
+} from '../../../test-utils/createTestRepository';
 
 describe('LocalLoanRepository', () => {
   let repo: TestLoanRepository;

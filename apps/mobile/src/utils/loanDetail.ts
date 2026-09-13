@@ -118,9 +118,6 @@ export function splitEntriesForDisplay(
   return { current, history };
 }
 
-/** @deprecated Use splitEntriesForDisplay */
-export const splitEntriesByToday = splitEntriesForDisplay;
-
 export function computeCollected(entries: DailyEntry[]): number {
   return entries.reduce((sum, entry) => sum + entry.receivedAmount, 0);
 }
