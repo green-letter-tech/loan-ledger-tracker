@@ -9,6 +9,7 @@ import { LoaneeDetailScreen } from '../screens/LoaneeDetailScreen';
 import { LoaneeFormScreen } from '../screens/LoaneeFormScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
+import { RefinanceLoanScreen } from '../screens/RefinanceLoanScreen';
 import { TabNavigator } from './TabNavigator';
 import type { RootStackParamList } from './types';
 
@@ -57,6 +58,11 @@ export function RootNavigator({ onboarded }: RootNavigatorProps) {
       <Stack.Screen
         name="ExtendLoan"
         component={ExtendLoanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RefinanceLoan"
+        component={RefinanceLoanScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
