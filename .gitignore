@@ -6,3 +6,8 @@ coverage/
 *.log
 .env
 .env.local
+apps/mobile/.expo/
+apps/mobile/dist/
+*.jks
+*.keystore
+google-services.json

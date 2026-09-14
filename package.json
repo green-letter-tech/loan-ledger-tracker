@@ -1,0 +1,15 @@
+{
+  "name": "lend-ledger",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "mobile": "npm run start --workspace=@lendledger/mobile",
+    "mobile:web": "npm run web --workspace=@lendledger/mobile",
+    "mobile:android": "npm run android --workspace=@lendledger/mobile",
+    "test:core": "npm run test --workspace=@lendledger/core",
+    "test:mobile": "npm run test --workspace=@lendledger/mobile",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build:android": "npm run build:android --workspace=@lendledger/mobile",
+    "build:android:preview": "npm run build:android:preview --workspace=@lendledger/mobile"
+  }
+}
