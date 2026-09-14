@@ -12,47 +12,33 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BottomActionBar } from '../components/BottomActionBar';
 import {
-  CalculatorField,
-  NumericInput,
-  OptionSelect,
-} from '../components/calculator/CalculatorInputs';
+  LoanTermsForm,
+  parseLoanTerms,
+  type LoanTermsValue,
+} from '../components/create-loan/LoanTermsForm';
 import { TabScreenLayout } from '../components/TabScreenLayout';
 import { Card, PillButton } from '../components/ui';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
 import type { CalculatorSnapshot } from '../types/calculator';
 
-const RATE_PERIOD_OPTIONS: ReadonlyArray<{ label: string; value: RatePeriod }> = [
-  { label: 'Per day', value: 'day' },
-  { label: 'Per month', value: 'month' },
-  { label: 'Per year', value: 'year' },
-];
-
-const DURATION_UNIT_OPTIONS: ReadonlyArray<{ label: string; value: DurationUnit }> = [
-  { label: 'Days', value: 'days' },
-  { label: 'Months', value: 'months' },
-  { label: 'Years', value: 'years' },
-];
+const DEFAULT_TERMS: LoanTermsValue = {
+  principal: '100',
+  rate: '1',
+  ratePeriod: 'day',
+  duration: '50',
+  durationUnit: 'days',
+};
 
 export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
   const { tokens } = useTheme();
 
-  const [principal, setPrincipal] = useState('100');
-  const [rate, setRate] = useState('1');
-  const [ratePeriod, setRatePeriod] = useState<RatePeriod>('day');
-  const [duration, setDuration] = useState('50');
-  const [durationUnit, setDurationUnit] = useState<DurationUnit>('days');
+  const [terms, setTerms] = useState<LoanTermsValue>(DEFAULT_TERMS);
+  const durationUnit = terms.durationUnit;
 
   const startDate = useMemo(() => formatISODateLocal(new Date()), []);
 
-  const parsed = useMemo(
-    () => ({
-      principal: parseFloat(principal) || 0,
-      rate: parseFloat(rate) || 0,
-      duration: parseFloat(duration) || 0,
-    }),
-    [principal, rate, duration],
-  );
+  const parsed = useMemo(() => parseLoanTerms(terms), [terms]);
 
   const result = useMemo(() => {
     if (parsed.principal <= 0 || parsed.duration <= 0) {
@@ -60,18 +46,11 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
     }
 
     try {
-      return calculateLoan({
-        principal: parsed.principal,
-        interestRate: parsed.rate,
-        ratePeriod,
-        duration: parsed.duration,
-        durationUnit,
-        startDate,
-      });
+      return calculateLoan({ ...parsed, startDate });
     } catch {
       return null;
     }
-  }, [parsed, ratePeriod, durationUnit, startDate]);
+  }, [parsed, startDate]);
 
   const snapshot = useMemo((): CalculatorSnapshot | null => {
     if (!result) {
@@ -80,8 +59,8 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
 
     return {
       principal: parsed.principal,
-      interestRate: parsed.rate,
-      ratePeriod,
+      interestRate: parsed.interestRate,
+      ratePeriod: parsed.ratePeriod,
       duration: parsed.duration,
       durationUnit,
       startDate: result.startDate ?? startDate,
@@ -91,7 +70,7 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
       totalInterest: result.totalInterest,
       endDate: result.endDate,
     };
-  }, [parsed, ratePeriod, durationUnit, result, startDate]);
+  }, [parsed, durationUnit, result, startDate]);
 
   const handleSaveAsLoan = useCallback(() => {
     if (!snapshot) {
@@ -109,51 +88,7 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
         showsVerticalScrollIndicator={false}
       >
         <Card pad={18}>
-          <View style={styles.inputCard}>
-          <CalculatorField label="Principal amount">
-            <NumericInput
-              value={principal}
-              onChangeValue={setPrincipal}
-              prefix="₹"
-              placeholder="100"
-              big
-            />
-          </CalculatorField>
-
-          <View style={styles.row}>
-            <View style={styles.rowCell}>
-              <CalculatorField label="Interest rate">
-                <NumericInput value={rate} onChangeValue={setRate} prefix="%" placeholder="1" />
-              </CalculatorField>
-            </View>
-            <View style={[styles.rowCell, styles.rowCellWide]}>
-              <CalculatorField label="Rate period">
-                <OptionSelect
-                  value={ratePeriod}
-                  options={RATE_PERIOD_OPTIONS}
-                  onChange={setRatePeriod}
-                />
-              </CalculatorField>
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.rowCell}>
-              <CalculatorField label="Duration">
-                <NumericInput value={duration} onChangeValue={setDuration} placeholder="50" />
-              </CalculatorField>
-            </View>
-            <View style={[styles.rowCell, styles.rowCellWide]}>
-              <CalculatorField label="Unit">
-                <OptionSelect
-                  value={durationUnit}
-                  options={DURATION_UNIT_OPTIONS}
-                  onChange={setDurationUnit}
-                />
-              </CalculatorField>
-            </View>
-          </View>
-          </View>
+          <LoanTermsForm value={terms} onChange={setTerms} />
         </Card>
 
         {result ? (
@@ -222,19 +157,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     gap: 14,
-  },
-  inputCard: {
-    gap: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  rowCell: {
-    flex: 1,
-  },
-  rowCellWide: {
-    flex: 1.15,
   },
   resultCard: {
     gap: 2,
