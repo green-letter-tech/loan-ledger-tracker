@@ -1,7 +1,22 @@
 import type { DurationUnit, ISODateString, RatePeriod } from './types';
 import type { DailyEntryStatus } from './entryStatus';
 
-export type LoanStatus = 'active' | 'extended' | 'closed';
+export type LoanStatus = 'active' | 'extended' | 'closed' | 'refinanced';
+
+/** Why a loan stopped running. */
+export type LoanClosedReason = 'manual' | 'refinanced';
+
+/**
+ * Recorded when a loan is settled by refinancing: the deduction withheld from the
+ * new loan's principal, split into the portions that repaid principal and interest,
+ * plus the future interest the lender forgave by ending the term early.
+ */
+export interface LoanSettlement {
+  deduction: number;
+  settlementPrincipal: number;
+  settlementInterest: number;
+  interestWaived: number;
+}
 
 export type ThemeSetting = 'light' | 'dark' | 'system';
 
@@ -71,6 +86,13 @@ export interface Loan {
   endDate: ISODateString;
   status: LoanStatus;
   createdAt: string;
+  closedAt: string | null;
+  closedReason: LoanClosedReason | null;
+  /** Set on the loan that replaced an earlier one. */
+  refinancedFromLoanId: string | null;
+  /** Set on the loan that was settled by a later one. */
+  refinancedToLoanId: string | null;
+  settlement: LoanSettlement | null;
 }
 
 export interface CreateLoanInput {
@@ -114,9 +136,43 @@ export interface DashboardStats {
   totalReceived: number;
   outstanding: number;
   activeCount: number;
+  /** Cumulative recovery across active loans, split proportionally. */
+  principalRecovered: number;
+  interestRecovered: number;
+  principalOutstanding: number;
+  interestOutstanding: number;
   donutByLoanee: DonutSlice[];
   weeklyBar: WeeklyBarPoint[];
   line30d: LinePoint[];
+}
+
+/** One collectable row for a given date, used by the bulk update screen. */
+export interface DatedEntry {
+  loan: Loan;
+  loanee: Loanee;
+  entry: DailyEntry;
+}
+
+export interface BulkEntryUpdate {
+  loanId: string;
+  receivedAmount: number;
+}
+
+export interface BulkUpdateResult {
+  updated: number;
+  /** Loan ids that no longer had a collectable entry on that date. */
+  skipped: string[];
+}
+
+export interface RefinanceLoanInput {
+  oldLoanId: string;
+  newLoan: CreateLoanInput;
+  settlement: LoanSettlement;
+}
+
+export interface LoanChain {
+  previous: Loan | null;
+  next: Loan | null;
 }
 
 export interface LoanRepository {
@@ -139,6 +195,14 @@ export interface LoanRepository {
     receivedAmount: number,
   ): Promise<DailyEntry>;
 
+  /** Collectable entries on one date across all running loans, ordered by loanee name. */
+  listEntriesForDate(entryDate: ISODateString): Promise<DatedEntry[]>;
+
+  bulkUpdateDailyEntries(
+    entryDate: ISODateString,
+    updates: BulkEntryUpdate[],
+  ): Promise<BulkUpdateResult>;
+
   extendLoan(
     loanId: string,
     days: number,
@@ -146,6 +210,11 @@ export interface LoanRepository {
     customTotal?: number,
   ): Promise<Loan>;
   closeLoan(loanId: string): Promise<Loan>;
+
+  /** Settle `oldLoanId` and start its replacement in one transaction. */
+  refinanceLoan(input: RefinanceLoanInput): Promise<{ oldLoan: Loan; newLoan: Loan }>;
+
+  getLoanChain(loanId: string): Promise<LoanChain>;
 
   getDashboardStats(): Promise<DashboardStats>;
 }

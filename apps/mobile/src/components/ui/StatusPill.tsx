@@ -5,10 +5,13 @@ import type { ThemeTokens } from '../../theme/tokens';
 
 export type LoanStatusLabel =
   | 'Paid'
+  | 'Overpaid'
   | 'Unpaid'
   | 'Partial'
+  | 'Underpaid'
   | 'Active'
   | 'Closed'
+  | 'Refinanced'
   | 'Overdue';
 
 interface StatusPillProps {
@@ -32,12 +35,16 @@ function getStatusColors(
 ): { color: string; background: string } {
   switch (status) {
     case 'Paid':
+    case 'Overpaid':
     case 'Active':
       return { color: tokens.green, background: tokens.greenTint };
     case 'Unpaid':
     case 'Closed':
       return { color: tokens.textFaint, background: tokens.surfaceSunken };
+    case 'Refinanced':
+      return { color: tokens.blue, background: tokens.blueTint };
     case 'Partial':
+    case 'Underpaid':
       return { color: tokens.amber, background: tokens.amberTint };
     case 'Overdue':
       return { color: tokens.red, background: tokens.redTint };

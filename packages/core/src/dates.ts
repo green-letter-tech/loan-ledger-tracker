@@ -1,3 +1,4 @@
+import { roundMoney } from './money';
 import type { DurationUnit, ISODateString, RatePeriod } from './types';
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -154,7 +155,7 @@ export function computeExpectedPerEntry(totalExpected: number, entryCount: numbe
   if (entryCount <= 0) {
     return 0;
   }
-  return Math.round((totalExpected / entryCount) * 100) / 100;
+  return roundMoney(totalExpected / entryCount);
 }
 
 export function paymentPeriodLabel(durationUnit: DurationUnit): string {

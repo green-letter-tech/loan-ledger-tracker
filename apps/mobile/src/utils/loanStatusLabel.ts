@@ -9,6 +9,8 @@ export function loanStatusToPill(status: LoanStatus): LoanStatusLabel {
       return 'Active';
     case 'closed':
       return 'Closed';
+    case 'refinanced':
+      return 'Refinanced';
     default: {
       const _exhaustive: never = status;
       throw new Error(`Unhandled loan status: ${_exhaustive}`);

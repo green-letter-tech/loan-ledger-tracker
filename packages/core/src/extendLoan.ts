@@ -1,4 +1,5 @@
 import { addCalendarDays } from './dates';
+import { roundMoney } from './money';
 import type { DailyEntry, ExtendLoanMode } from './repository-types';
 import type { ISODateString } from './types';
 
@@ -15,7 +16,7 @@ export function computeRecalculateDaily(outstanding: number, extensionDays: numb
   if (extensionDays <= 0) {
     throw new Error('Extension days must be positive');
   }
-  return Math.round((outstanding / extensionDays) * 100) / 100;
+  return roundMoney(outstanding / extensionDays);
 }
 
 export interface ExtendLoanPreviewInput {

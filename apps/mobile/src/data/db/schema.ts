@@ -5,9 +5,11 @@
 
 export const DB_NAME = 'lendledger.db';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
-export type LoanStatus = 'active' | 'extended' | 'closed';
+export type LoanStatus = 'active' | 'extended' | 'closed' | 'refinanced';
+
+export type LoanClosedReason = 'manual' | 'refinanced';
 
 export type DailyEntryStatus = 'paid' | 'unpaid' | 'partial';
 
@@ -62,6 +64,14 @@ export interface LoanRow {
   end_date: string;
   status: LoanStatus;
   created_at: string;
+  closed_at: string | null;
+  closed_reason: LoanClosedReason | null;
+  refinanced_from_loan_id: string | null;
+  refinanced_to_loan_id: string | null;
+  settlement_deduction: number | null;
+  settlement_principal: number | null;
+  settlement_interest: number | null;
+  interest_waived: number | null;
 }
 
 export interface DailyEntryRow {

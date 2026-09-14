@@ -91,7 +91,24 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     await setUserVersion(db, 2);
   }
 
-  if (SCHEMA_VERSION > 2) {
+  if (current < 3) {
+    await db.execAsync(`
+      ALTER TABLE loans ADD COLUMN closed_at TEXT;
+      ALTER TABLE loans ADD COLUMN closed_reason TEXT;
+      ALTER TABLE loans ADD COLUMN refinanced_from_loan_id TEXT;
+      ALTER TABLE loans ADD COLUMN refinanced_to_loan_id TEXT;
+      ALTER TABLE loans ADD COLUMN settlement_deduction REAL;
+      ALTER TABLE loans ADD COLUMN settlement_principal REAL;
+      ALTER TABLE loans ADD COLUMN settlement_interest REAL;
+      ALTER TABLE loans ADD COLUMN interest_waived REAL;
+      UPDATE loans SET closed_reason = 'manual' WHERE status = 'closed';
+      CREATE INDEX IF NOT EXISTS idx_loans_refinanced_from ON loans(refinanced_from_loan_id);
+      CREATE INDEX IF NOT EXISTS idx_daily_entries_date ON daily_entries(entry_date);
+    `);
+    await setUserVersion(db, 3);
+  }
+
+  if (SCHEMA_VERSION > 3) {
     throw new Error(`Database schema v${SCHEMA_VERSION} not implemented (at v${await getUserVersion(db)})`);
   }
 }
