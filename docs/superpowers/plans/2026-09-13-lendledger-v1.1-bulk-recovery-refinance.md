@@ -267,3 +267,34 @@ Stop after phase 6 and after phase 9 for a user review on device (web preview at
 1. Bulk update currently excludes loans with no entry on the chosen date (monthly/yearly). Default: exclude + show count. Alternative: show them greyed out.
 2. "Update today" pill placement — default 2×2 grid of quick actions. Alternative: a full-width banner `Record today's collections` above the stat cards.
 3. Whether the loanees list should show a chain icon for refinanced loans. Default: no; the loan detail banners are enough for v1.1.
+
+---
+
+## 9. Implementation record — 2026-09-13
+
+Branch `feature/v1.1-bulk-refinance` off `feature/UI_implementation`. All features implemented; **99 tests green** (64 core, 75 mobile — up from 29 + 39) with a clean typecheck at every commit.
+
+| Commit | Scope |
+|--------|-------|
+| `cb9ea1e` | Core `money`/`variance`/`recovery`/`refinance` + schema v3 + repository (`listEntriesForDate`, `bulkUpdateDailyEntries`, `refinanceLoan`, `getLoanChain`, recovery stats) |
+| `fd63f42` | Loan detail: rate line, RecoveryCard, variance rows, Underpaid filter, Notes, chain banners, Refinance action |
+| `51791aa` | Dashboard RecoveryCard + `Update today's collections`; `utils/bulkUpdate.ts`; `BulkUpdateScreen`; shared `ConfirmModal` |
+| `7ea85c9` | Extract shared `LoanTermsForm` (no behaviour change) |
+| `aa6b916` | `RefinanceLoanScreen` + navigation |
+
+### Deviations from the plan, and why
+
+1. **Phases 1–6 landed as one commit, not five.** Every intermediate split would have failed `typecheck`: adding `'refinanced'` to `LoanStatus` breaks the exhaustive switches in the mobile app, and adding methods to the `LoanRepository` interface breaks `LocalLoanRepository` until they are implemented. The rule "typecheck green before every commit" won over the commit granularity in §6. Phases 7–12 split cleanly and did.
+2. **`LoanTermsForm` was extracted from `CalculatorScreen`, not `CreateLoanScreen`.** §4.4 assumed Create loan owns the term inputs; it does not — it receives a `CalculatorSnapshot` and only edits the start date. The form lives in the calculator, so that is where it was extracted from. Same outcome: one shared form, no fork.
+3. **`roundMoney()` is a new module (`core/money.ts`).** §2.1 said to reuse the existing rounding helper, but there was no named one — `extendLoan.ts` and `dates.ts` each inlined `Math.round(x * 100) / 100`. Both now call `roundMoney`, so there is exactly one rounding rule rather than three.
+4. **Quick actions became a 1 + 2 stack, not a 2×2 grid.** "Update today's collections" is the primary daily action, so it takes a full-width primary pill with Calculate and Loanee sharing the row beneath. Same footprint as a grid, clearer hierarchy. (Open item 2 above is now settled this way.)
+5. **`summarizeVariance` keys off display status, not raw variance.** A day with ₹0 expected and money received reads as `paid` (§5), so counting it as overpaid in the Notes section would contradict its own pill. It is excluded from both totals.
+6. **The action bar is hidden for closed loans too, not just refinanced ones.** §4.1 implied closed loans already hid it; they showed disabled buttons. Both now hide it.
+7. **`RecoverySplit` carries `principal` and `totalInterest`.** The card renders "₹x of ₹P", which the five fields in §2.2 could not supply.
+8. **`deleteLoanee` also removes refinanced loans.** §1 noted refinanced loans are not active so deletion is allowed — but the delete only swept `status = 'closed'`, which would have orphaned the settled loan and failed the loanee delete. It now sweeps `('closed', 'refinanced')`.
+9. **Dashboard recovery uses one aggregate row per loan.** `computeRecoverySplit` reads only the sums of expected and received, so a `GROUP BY loan_id` query gives an identical answer without loading every entry.
+
+### Not done
+
+- No device or web-preview verification: the two review stops in §6 (after phases 6 and 9) were not taken, so every UI claim above is from code review and unit tests only. §11–14 of the smoke-test checklist covers what needs eyes on a phone.
+- 300-row bulk update performance (§5) is structurally handled — `FlatList` with `keyExtractor={row => row.loanId}` and row state held per `loanId` — but was not measured.

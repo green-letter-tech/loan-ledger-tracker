@@ -11,9 +11,36 @@ Shared loan math, types, and INR formatting for LendLedger. Used by `apps/mobile
 | `paymentSchedule.ts` | `buildPaymentSchedule()` — one entry per day / month / year with expected amount |
 | `entryStatus.ts` | `deriveDailyEntryStatus()` — paid / partial / unpaid from received vs expected |
 | `extendLoan.ts` | `computeOutstandingBalance()`, `resolveExtendDaily()`, `previewExtendLoan()` — keep / recalculate / custom modes |
+| `money.ts` | `roundMoney()` — the one rounding rule (2 dp). Never inline `Math.round(x * 100) / 100` |
+| `variance.ts` | `entryVariance()`, `deriveEntryDisplayStatus()`, `summarizeVariance()` — paid / overpaid / underpaid / unpaid for display |
+| `recovery.ts` | `principalShare()`, `computeRecoverySplit()`, `sumRecoverySplits()` — proportional principal vs interest recovered |
+| `refinance.ts` | `previewRefinance()` — remaining principal, arrears, interest waived, deduction, cash to hand |
 | `format.ts` | `formatINR()` / `groupINR()` — Indian lakh grouping |
 | `types.ts` | Input/output types for loan calculations |
 | `repository-types.ts` | `LoanRepository` interface + domain types (`Loan`, `Loanee`, `DailyEntry`, `DashboardStats`, `OwnerSettings`) shared with the app |
+
+## Recovery and refinance formulas
+
+Recovery is **proportional**: every rupee collected splits in the loan's own principal-to-interest ratio, so neither is recovered "first".
+
+```
+totalExpected = Σ expected over the entry schedule   (not loan.totalExpected — extensions add entries)
+share         = principal ÷ totalExpected
+principalRecovered = min(principal, received × share)
+interestRecovered  = min(totalInterest, received × (1 − share))
+```
+
+Refinance withholds enough of the new principal to settle the old loan:
+
+```
+remainingPrincipal = share × Σ expected over untouched days from today onward
+interestWaived     = remainingExpected − remainingPrincipal
+arrears            = Σ max(0, expected − received) over days already due
+deduction          = remainingPrincipal + arrears   (lender may override)
+cashToHand         = newPrincipal − deduction       (may be negative)
+```
+
+**Canonical example:** ₹100 over 120 days at ₹1/day, 80 days paid → 40 days remain → deduction **₹33.33**, interest waived ₹6.67, cash to hand ₹66.67 on a fresh ₹100 loan.
 
 ## Loan formula
 

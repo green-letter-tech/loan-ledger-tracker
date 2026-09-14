@@ -34,7 +34,8 @@ cd design && ./start-preview.sh     # → http://localhost:8765/LendLedger.html
 ## Status (September 2026)
 
 - **App:** MVP1 feature-complete on `feature/UI_implementation` — onboarding, calculator, create loan (days / months / years), loanees, loan detail with daily tracking, extend (keep / recalculate / custom), close, dashboard with charts, reminders, settings, privacy policy.
-- **Testing:** preview APK shared with first Android testers; feedback round 1 (6 UX fixes) shipped.
+- **v1.1 (`feature/v1.1-bulk-refinance`, code complete, awaiting device testing):** payment variance (overpaid / underpaid), bulk update for a whole day's collections, principal-vs-interest recovery on loan detail and the dashboard, and refinance — a new loan whose proceeds settle the old one, with the deduction and cash-to-hand worked out for the lender. Plan and implementation record: `docs/superpowers/plans/2026-09-13-lendledger-v1.1-bulk-recovery-refinance.md`.
+- **Testing:** preview APK shared with first Android testers; feedback round 1 (6 UX fixes) shipped. v1.1 needs a pass over §11–14 of the smoke-test checklist.
 - **Next:** Play Store listing assets (Task 23) → production AAB → internal testing (Task 24). Detailed progress table in `docs/superpowers/plans/2026-06-06-lendledger-mvp1.md`.
 - **Not in MVP1:** accounts, cloud sync, multi-device (Track B — see spec §3).
 
