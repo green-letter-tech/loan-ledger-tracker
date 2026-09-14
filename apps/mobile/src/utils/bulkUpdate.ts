@@ -50,14 +50,15 @@ export function initialRows(items: ReadonlyArray<DatedEntry>): BulkRow[] {
       original,
       checked: paidInFull,
       // Keep an existing part payment visible so it can be corrected in place.
-      amountText: paidInFull ? '' : String(original),
+      // Use empty string for zero so placeholder shows.
+      amountText: paidInFull ? '' : original > 0 ? String(original) : '',
     };
   });
 }
 
 export function toggleSelectAll(rows: ReadonlyArray<BulkRow>, on: boolean): BulkRow[] {
   return rows.map((row) =>
-    on ? { ...row, checked: true, amountText: '' } : { ...row, checked: false, amountText: '0' },
+    on ? { ...row, checked: true, amountText: '' } : { ...row, checked: false, amountText: '' },
   );
 }
 
@@ -67,9 +68,9 @@ export function toggleRow(rows: ReadonlyArray<BulkRow>, loanId: string): BulkRow
       return row;
     }
     if (row.checked) {
-      // Unchecking falls back to any part payment already recorded, else zero.
+      // Unchecking falls back to any part payment already recorded, else empty (placeholder shows).
       const fallback = row.original > 0 && row.original < row.expected ? row.original : 0;
-      return { ...row, checked: false, amountText: String(fallback) };
+      return { ...row, checked: false, amountText: fallback > 0 ? String(fallback) : '' };
     }
     return { ...row, checked: true, amountText: '' };
   });

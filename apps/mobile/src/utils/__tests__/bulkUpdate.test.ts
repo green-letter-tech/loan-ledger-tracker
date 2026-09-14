@@ -109,7 +109,7 @@ describe('initialRows', () => {
 
     expect(rows[0]).toMatchObject({ checked: true, amountText: '' });
     expect(rows[1]).toMatchObject({ checked: false, amountText: '4' });
-    expect(rows[2]).toMatchObject({ checked: false, amountText: '0' });
+    expect(rows[2]).toMatchObject({ checked: false, amountText: '' });
   });
 
   it('produces no pending changes when reopened unchanged', () => {
@@ -134,7 +134,7 @@ describe('selection', () => {
 
   it('unselect all clears every row to zero', () => {
     const rows = toggleSelectAll([row({ checked: true, original: 10 })], false);
-    expect(rows[0]).toMatchObject({ checked: false, amountText: '0' });
+    expect(rows[0]).toMatchObject({ checked: false, amountText: '' });
     expect(diffRows(rows)).toEqual([{ loanId: 'l1', receivedAmount: 0 }]);
   });
 
@@ -145,7 +145,7 @@ describe('selection', () => {
 
   it('unchecking a fully paid row falls back to zero', () => {
     const rows = toggleRow([row({ checked: true, original: 10 })], 'l1');
-    expect(rows[0].amountText).toBe('0');
+    expect(rows[0].amountText).toBe('');
   });
 
   it('typing an amount unchecks the row', () => {

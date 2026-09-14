@@ -314,7 +314,6 @@ function BulkUpdateRow({ row, tokens, onToggle, onChangeAmount }: BulkUpdateRowP
               keyboardType="decimal-pad"
               placeholder="0"
               placeholderTextColor={tokens.textFaint}
-              selectTextOnFocus
               style={[
                 styles.rowInput,
                 {
