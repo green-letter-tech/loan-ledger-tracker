@@ -25,7 +25,8 @@ export function Card({ children, grad = 'none', pad = 16, elev = false, onPress,
       borderColor: tokens.borderSoft,
       ...(elev ? styles.elevated : styles.flat),
     },
-    style,
+    // Only apply external style if there's no onPress wrapper
+    !onPress && style,
   ];
 
   const content = <View style={{ padding: pad }}>{children}</View>;
@@ -41,7 +42,7 @@ export function Card({ children, grad = 'none', pad = 16, elev = false, onPress,
     );
 
     if (onPress) {
-      return <Pressable onPress={onPress}>{gradient}</Pressable>;
+      return <Pressable onPress={onPress} style={style}>{gradient}</Pressable>;
     }
     return gradient;
   }
@@ -51,7 +52,7 @@ export function Card({ children, grad = 'none', pad = 16, elev = false, onPress,
   );
 
   if (onPress) {
-    return <Pressable onPress={onPress}>{surface}</Pressable>;
+    return <Pressable onPress={onPress} style={style}>{surface}</Pressable>;
   }
   return surface;
 }
