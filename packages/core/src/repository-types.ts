@@ -187,6 +187,7 @@ export interface LoanRepository {
   createLoan(input: CreateLoanInput): Promise<Loan>;
   getLoan(id: string): Promise<Loan | null>;
   listActiveLoans(): Promise<Loan[]>;
+  listLoansForLoanee(loaneeId: string): Promise<Loan[]>;
   getDailyEntries(loanId: string): Promise<DailyEntry[]>;
 
   updateDailyEntry(

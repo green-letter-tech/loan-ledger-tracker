@@ -265,6 +265,15 @@ export class LocalLoanRepository implements LoanRepository {
     return rows.map(mapLoan);
   }
 
+  async listLoansForLoanee(loaneeId: string): Promise<Loan[]> {
+    const rows = await this.db.getAllAsync<LoanRowJoined>(
+      `SELECT * FROM loans WHERE owner_id = ? AND loanee_id = ? ORDER BY created_at DESC`,
+      this.ownerId,
+      loaneeId,
+    );
+    return rows.map(mapLoan);
+  }
+
   async getDailyEntries(loanId: string): Promise<DailyEntry[]> {
     const rows = await this.db.getAllAsync<DailyEntryRow>(
       `SELECT de.* FROM daily_entries de

@@ -24,6 +24,8 @@ import { confirmDestructiveAction, showAlert } from '../utils/confirmAction';
 import { loanStatusToPill } from '../utils/loanStatusLabel';
 import { loadLoaneeDetail, type LoanWithSummary } from '../utils/loanSummary';
 
+const ACTIVE_STATUSES = ['running', 'extended'] as const;
+
 export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'LoaneeDetail'>) {
   const { loaneeId } = route.params;
   const { resolvedTheme, tokens } = useTheme();
@@ -56,8 +58,13 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
     }, [loadDetail]),
   );
 
-  const totalOutstanding = loans.reduce((sum, item) => sum + item.outstanding, 0);
-  const hasActiveLoans = loans.length > 0;
+  const totalOutstanding = loans
+    .filter((item) => ACTIVE_STATUSES.includes(item.loan.status as any))
+    .reduce((sum, item) => sum + item.outstanding, 0);
+  const activeCount = loans.filter((item) =>
+    ACTIVE_STATUSES.includes(item.loan.status as any),
+  ).length;
+  const hasActiveLoans = activeCount > 0;
 
   const openEdit = useCallback(() => {
     navigation.navigate('LoaneeForm', { loaneeId });
@@ -181,7 +188,7 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
         <View style={styles.statsCards}>
           <Card pad={14} style={styles.statCard}>
             <Text style={[styles.statLabel, { color: tokens.textFaint }]}>Active loans</Text>
-            <Text style={[styles.statValue, { color: tokens.text }]}>{loans.length}</Text>
+            <Text style={[styles.statValue, { color: tokens.text }]}>{activeCount}</Text>
           </Card>
           <Card pad={14} style={styles.statCard}>
             <Text style={[styles.statLabel, { color: tokens.textFaint }]}>Outstanding</Text>
@@ -191,12 +198,12 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
           </Card>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: tokens.text }]}>Loans</Text>
+        <Text style={[styles.sectionTitle, { color: tokens.text }]}>All loans</Text>
 
         {loans.length === 0 ? (
           <Card pad={16}>
             <Text style={[styles.emptyLoans, { color: tokens.textSoft }]}>
-              No active loans for this loanee yet.
+              No loans for this loanee yet.
             </Text>
           </Card>
         ) : (

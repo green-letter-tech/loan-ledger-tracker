@@ -60,12 +60,11 @@ export async function loadLoaneeDetail(
     return { loanee: null, loans: [] };
   }
 
-  const activeLoans = (await repository.listActiveLoans()).filter(
-    (loan) => loan.loaneeId === loaneeId,
-  );
+  // Show all loans for this loanee, including closed/refinanced for history
+  const allLoans = await repository.listLoansForLoanee(loaneeId);
 
   const loans = await Promise.all(
-    activeLoans.map(async (loan) => {
+    allLoans.map(async (loan) => {
       const entries = await repository.getDailyEntries(loan.id);
       const { logged, total } = computeLoanProgress(entries);
       return {
