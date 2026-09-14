@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useTheme } from '../hooks/useTheme';
+import { ActiveLoansScreen } from '../screens/ActiveLoansScreen';
 import { BulkUpdateScreen } from '../screens/BulkUpdateScreen';
 import { CreateLoanScreen } from '../screens/CreateLoanScreen';
 import { ExtendLoanScreen } from '../screens/ExtendLoanScreen';
@@ -39,6 +40,11 @@ export function RootNavigator({ onboarded }: RootNavigatorProps) {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Main" component={TabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="ActiveLoans"
+        component={ActiveLoansScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="LoanDetail" component={LoanDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="CreateLoan"

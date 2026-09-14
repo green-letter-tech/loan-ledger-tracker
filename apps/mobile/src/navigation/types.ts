@@ -16,6 +16,7 @@ export type TabParamList = {
 export type RootStackParamList = {
   Onboarding: undefined;
   Main: NavigatorScreenParams<TabParamList>;
+  ActiveLoans: undefined;
   LoanDetail: { loanId: string };
   CreateLoan: { loaneeId?: string; calculatorSnapshot?: CalculatorSnapshot };
   LoaneeForm: { loaneeId?: string };

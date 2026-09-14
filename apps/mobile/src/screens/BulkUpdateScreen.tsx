@@ -288,50 +288,52 @@ function BulkUpdateRow({ row, tokens, onToggle, onChangeAmount }: BulkUpdateRowP
   const overpaid = valid && !row.checked && amount > row.expected;
 
   return (
-    <Card pad={13} style={styles.rowCard}>
-      <Pressable onPress={onToggle} style={styles.rowMain} accessibilityRole="checkbox" accessibilityState={{ checked: row.checked }}>
-        <Checkbox checked={row.checked} tokens={tokens} />
-        <View style={styles.rowBody}>
-          <Text style={[styles.rowName, { color: tokens.text }]} numberOfLines={1}>
-            {row.loaneeName}
-          </Text>
-          <Text style={[styles.rowMeta, { color: tokens.textFaint }]}>
-            Due {formatINR(row.expected)} · {row.loanLabel}
-          </Text>
-        </View>
-      </Pressable>
-
-      {row.checked ? (
-        <Text style={[styles.rowPaidAmount, { color: tokens.green }]}>
-          {formatINR(row.expected)}
-        </Text>
-      ) : (
-        <View style={styles.rowInputWrap}>
-          <TextInput
-            value={row.amountText}
-            onChangeText={onChangeAmount}
-            keyboardType="decimal-pad"
-            placeholder="0"
-            placeholderTextColor={tokens.textFaint}
-            style={[
-              styles.rowInput,
-              {
-                color: tokens.text,
-                backgroundColor: tokens.surfaceSunken,
-                borderColor: valid ? tokens.border : tokens.red,
-              },
-            ]}
-            accessibilityLabel={`Amount received from ${row.loaneeName}`}
-          />
-          {!valid ? (
-            <Text style={[styles.rowError, { color: tokens.red }]}>Invalid</Text>
-          ) : overpaid ? (
-            <Text style={[styles.rowError, { color: tokens.green }]}>
-              +{formatINR(amount - row.expected)}
+    <Card pad={0} style={styles.rowCard}>
+      <View style={styles.rowInner}>
+        <Pressable onPress={onToggle} style={styles.rowMain} accessibilityRole="checkbox" accessibilityState={{ checked: row.checked }}>
+          <Checkbox checked={row.checked} tokens={tokens} />
+          <View style={styles.rowBody}>
+            <Text style={[styles.rowName, { color: tokens.text }]} numberOfLines={1}>
+              {row.loaneeName}
             </Text>
-          ) : null}
-        </View>
-      )}
+            <Text style={[styles.rowMeta, { color: tokens.textFaint }]} numberOfLines={1}>
+              Due {formatINR(row.expected)} · {row.loanLabel}
+            </Text>
+          </View>
+        </Pressable>
+
+        {row.checked ? (
+          <Text style={[styles.rowPaidAmount, { color: tokens.green }]}>
+            {formatINR(row.expected)}
+          </Text>
+        ) : (
+          <View style={styles.rowInputWrap}>
+            <TextInput
+              value={row.amountText}
+              onChangeText={onChangeAmount}
+              keyboardType="decimal-pad"
+              placeholder="0"
+              placeholderTextColor={tokens.textFaint}
+              style={[
+                styles.rowInput,
+                {
+                  color: tokens.text,
+                  backgroundColor: tokens.surfaceSunken,
+                  borderColor: valid ? tokens.border : tokens.red,
+                },
+              ]}
+              accessibilityLabel={`Amount received from ${row.loaneeName}`}
+            />
+            {!valid ? (
+              <Text style={[styles.rowError, { color: tokens.red }]}>Invalid</Text>
+            ) : overpaid ? (
+              <Text style={[styles.rowError, { color: tokens.green }]}>
+                +{formatINR(amount - row.expected)}
+              </Text>
+            ) : null}
+          </View>
+        )}
+      </View>
     </Card>
   );
 }
@@ -440,18 +442,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   rowCard: {
+    marginBottom: 0,
+  },
+  rowInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    padding: 13,
   },
   rowMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    minWidth: 0,
   },
   rowBody: {
     flex: 1,
+    minWidth: 0,
   },
   rowName: {
     fontSize: 15,

@@ -220,6 +220,7 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
               iconBg={tokens.surface2}
               tokens={tokens}
               large
+              onPress={() => navigation.navigate('ActiveLoans')}
             />
           </View>
 
@@ -381,6 +382,7 @@ interface StatCardProps {
   grad?: 'blue' | 'green';
   valueColor?: string;
   large?: boolean;
+  onPress?: () => void;
 }
 
 function StatCard({
@@ -393,9 +395,10 @@ function StatCard({
   grad,
   valueColor,
   large,
+  onPress,
 }: StatCardProps) {
   return (
-    <Card grad={grad ?? 'none'} pad={14} style={styles.statCard}>
+    <Card grad={grad ?? 'none'} pad={14} style={styles.statCard} onPress={onPress}>
       <View style={styles.statTop}>
         <Text style={[styles.statLabel, { color: tokens.textSoft }]}>{label}</Text>
         <View style={[styles.statIconWrap, { backgroundColor: iconBg }]}>

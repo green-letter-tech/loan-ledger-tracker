@@ -45,7 +45,7 @@ export function initialRows(items: ReadonlyArray<DatedEntry>): BulkRow[] {
     return {
       loanId: item.loan.id,
       loaneeName: item.loanee.name,
-      loanLabel: `${item.loan.principal} principal`,
+      loanLabel: `₹${item.loan.principal} loan`,
       expected,
       original,
       checked: paidInFull,
