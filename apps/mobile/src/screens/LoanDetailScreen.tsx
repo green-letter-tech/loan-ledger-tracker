@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
+  computeRecoverySplit,
+  entryVariance,
   formatINR,
   formatISODateLocal,
   paymentPeriodLabel,
   paymentProgressLabel,
   type DailyEntry,
   type Loan,
+  type LoanChain,
 } from '@lendledger/core';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -24,6 +27,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomActionBar } from '../components/BottomActionBar';
 import { CloseLoanModal } from '../components/CloseLoanModal';
 import { CustomAmountSheet } from '../components/CustomAmountSheet';
+import { RecoveryCard } from '../components/RecoveryCard';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Card, PillButton, StatusPill } from '../components/ui';
 import { useRepository } from '../context/AppProvider';
@@ -32,13 +36,14 @@ import type { RootStackScreenProps } from '../navigation/types';
 import {
   buildLoanDetailSummary,
   currentEntrySectionLabel,
-  dailyStatusToPill,
+  entryToPill,
   filterHistoryEntries,
   formatEntryDateShort,
   resolveCurrentEntry,
   type EntryFilter,
 } from '../utils/loanDetail';
 import { formatStartDateLabel } from '../utils/formatStartDate';
+import { formatTermsSummary } from '../utils/loanTerms';
 import { loanStatusToPill } from '../utils/loanStatusLabel';
 import { showAlert } from '../utils/confirmAction';
 import type { ThemeTokens } from '../theme/tokens';
@@ -47,7 +52,7 @@ const FILTER_OPTIONS: ReadonlyArray<{ label: EntryFilter; value: EntryFilter }> 
   { label: 'All', value: 'All' },
   { label: 'Paid', value: 'Paid' },
   { label: 'Unpaid', value: 'Unpaid' },
-  { label: 'Partial', value: 'Partial' },
+  { label: 'Underpaid', value: 'Underpaid' },
 ];
 
 export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'LoanDetail'>) {
@@ -65,6 +70,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
   const [sheetEntry, setSheetEntry] = useState<DailyEntry | null>(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [chain, setChain] = useState<LoanChain>({ previous: null, next: null });
 
   const loadLoan = useCallback(async () => {
     setLoading(true);
@@ -76,15 +82,17 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
         return;
       }
 
-      const [loanees, entryList] = await Promise.all([
+      const [loanees, entryList, loanChain] = await Promise.all([
         repository.listLoanees(),
         repository.getDailyEntries(loanId),
+        repository.getLoanChain(loanId),
       ]);
 
       const loanee = loanees.find((entry) => entry.id === loanData.loaneeId);
       setLoan(loanData);
       setLoaneeName(loanee?.name ?? 'Loan');
       setEntries(entryList);
+      setChain(loanChain);
     } finally {
       setLoading(false);
     }
@@ -97,6 +105,10 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
   );
 
   const summary = useMemo(() => buildLoanDetailSummary(entries), [entries]);
+  const recovery = useMemo(
+    () => (loan ? computeRecoverySplit(loan, entries) : null),
+    [loan, entries],
+  );
   const activeEntry = useMemo(
     () => resolveCurrentEntry(entries, todayIso),
     [entries, todayIso],
@@ -151,7 +163,9 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
     }
   }, [loanId, navigation, repository]);
 
-  const isClosed = loan?.status === 'closed';
+  const isRefinanced = loan?.status === 'refinanced';
+  // A finished loan takes no more collections, so its actions are hidden.
+  const isFinished = loan?.status === 'closed' || isRefinanced;
 
   if (loading) {
     return (
@@ -221,6 +235,8 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
             </View>
           </View>
 
+          <Text style={styles.heroTerms}>{formatTermsSummary(loan)}</Text>
+
           <View style={styles.heroProgressMeta}>
             <Text style={styles.heroProgressText}>
               {summary.logged} of {summary.total} {paymentProgressLabel(loan.durationUnit)}
@@ -244,15 +260,40 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
             </View>
           </View>
 
-          {summary.overpaymentCredit > 0 ? (
-            <View style={styles.overpayBanner}>
-              <Ionicons name="arrow-up" size={14} color="#FFFFFF" />
-              <Text style={styles.overpayText}>
-                {formatINR(summary.overpaymentCredit)} overpayment credit applied
-              </Text>
-            </View>
-          ) : null}
         </LinearGradient>
+
+        {chain.next ? (
+          <ChainBanner
+            icon="arrow-forward-circle-outline"
+            text={`Refinanced${loan.closedAt ? ` on ${formatEntryDateShort(loan.closedAt.slice(0, 10))}` : ''} — view new loan`}
+            onPress={() => navigation.push('LoanDetail', { loanId: chain.next!.id })}
+            tokens={tokens}
+          />
+        ) : null}
+
+        {chain.previous ? (
+          <ChainBanner
+            icon="arrow-back-circle-outline"
+            text={`Continues loan from ${formatEntryDateShort(chain.previous.startDate)} — view previous`}
+            onPress={() => navigation.push('LoanDetail', { loanId: chain.previous!.id })}
+            tokens={tokens}
+          />
+        ) : null}
+
+        {recovery ? (
+          <RecoveryCard
+            title="Recovery"
+            split={recovery}
+            footnotes={
+              loan.settlement
+                ? [
+                    { label: 'Settled via refinance', value: formatINR(loan.settlement.deduction) },
+                    { label: 'Interest waived', value: formatINR(loan.settlement.interestWaived) },
+                  ]
+                : undefined
+            }
+          />
+        ) : null}
 
         {activeEntry ? (
           <View>
@@ -379,30 +420,59 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
             )}
           </Card>
         </View>
+
+        {summary.variance.overpaidDays > 0 || summary.variance.underpaidDays > 0 ? (
+          <View>
+            <Text style={[styles.sectionLabel, { color: tokens.textFaint }]}>Notes</Text>
+            <Card pad={15}>
+              {summary.variance.overpaidDays > 0 ? (
+                <VarianceNote
+                  color={tokens.green}
+                  amount={`+${formatINR(summary.variance.overpaidTotal)}`}
+                  text={`Overpaid across ${summary.variance.overpaidDays} ${summary.variance.overpaidDays === 1 ? 'day' : 'days'}`}
+                  tokens={tokens}
+                />
+              ) : null}
+              {summary.variance.underpaidDays > 0 ? (
+                <VarianceNote
+                  color={tokens.amber}
+                  amount={`\u2212${formatINR(summary.variance.underpaidTotal)}`}
+                  text={`Underpaid across ${summary.variance.underpaidDays} ${summary.variance.underpaidDays === 1 ? 'day' : 'days'}`}
+                  tokens={tokens}
+                />
+              ) : null}
+            </Card>
+          </View>
+        ) : null}
       </ScrollView>
 
-      <BottomActionBar>
-        <View style={styles.bottomActions}>
-          <PillButton
-            variant="outline"
-            full
-            disabled={isClosed}
-            onPress={() => navigation.navigate('ExtendLoan', { loanId: loan.id })}
-            style={styles.bottomButton}
-          >
-            Extend loan
-          </PillButton>
-          <PillButton
-            variant="danger"
-            full
-            disabled={isClosed}
-            onPress={() => setShowCloseModal(true)}
-            style={styles.bottomButton}
-          >
-            Close loan
-          </PillButton>
-        </View>
-      </BottomActionBar>
+      {isFinished ? null : (
+        <BottomActionBar>
+          <View style={styles.bottomStack}>
+            <View style={styles.bottomActions}>
+              <PillButton
+                variant="outline"
+                full
+                onPress={() => navigation.navigate('ExtendLoan', { loanId: loan.id })}
+                style={styles.bottomButton}
+              >
+                Extend
+              </PillButton>
+              <PillButton
+                variant="outline"
+                full
+                onPress={() => navigation.navigate('RefinanceLoan', { oldLoanId: loan.id })}
+                style={styles.bottomButton}
+              >
+                Refinance
+              </PillButton>
+            </View>
+            <PillButton variant="danger" full onPress={() => setShowCloseModal(true)}>
+              Close loan
+            </PillButton>
+          </View>
+        </BottomActionBar>
+      )}
 
       <CloseLoanModal
         visible={showCloseModal}
@@ -438,7 +508,8 @@ interface HistoryDayRowProps {
 
 function HistoryDayRow({ entry, last, isFuture, onPress, tokens }: HistoryDayRowProps) {
   const isPartial = entry.status === 'partial';
-  const pill = dailyStatusToPill(entry.status);
+  const pill = entryToPill(entry);
+  const variance = entryVariance(entry);
   const iconBg = isFuture
     ? tokens.surfaceSunken
     : entry.status === 'paid'
@@ -488,14 +559,63 @@ function HistoryDayRow({ entry, last, isFuture, onPress, tokens }: HistoryDayRow
         <View style={[styles.scheduledTag, { backgroundColor: tokens.surfaceSunken }]}>
           <Text style={[styles.scheduledText, { color: tokens.textFaint }]}>Scheduled</Text>
         </View>
-      ) : isPartial ? (
-        <Text style={[styles.historyPartialAmount, { color: tokens.amber }]}>
-          {formatINR(entry.receivedAmount)} / {formatINR(entry.expectedAmount)}
-        </Text>
       ) : (
-        <StatusPill status={pill} />
+        <View style={styles.historyRight}>
+          <StatusPill status={pill} />
+          {variance !== 0 ? (
+            <Text
+              style={[
+                styles.historyVariance,
+                { color: variance > 0 ? tokens.green : tokens.amber },
+              ]}
+            >
+              {variance > 0 ? '+' : '\u2212'}
+              {formatINR(Math.abs(variance))}
+            </Text>
+          ) : null}
+        </View>
       )}
     </Pressable>
+  );
+}
+
+interface ChainBannerProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  text: string;
+  onPress: () => void;
+  tokens: ThemeTokens;
+}
+
+function ChainBanner({ icon, text, onPress, tokens }: ChainBannerProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.chainBanner,
+        { backgroundColor: tokens.blueTint, borderColor: tokens.blue },
+      ]}
+      accessibilityRole="button"
+    >
+      <Ionicons name={icon} size={18} color={tokens.blue} />
+      <Text style={[styles.chainText, { color: tokens.blue }]}>{text}</Text>
+      <Ionicons name="chevron-forward" size={16} color={tokens.blue} />
+    </Pressable>
+  );
+}
+
+interface VarianceNoteProps {
+  color: string;
+  amount: string;
+  text: string;
+  tokens: ThemeTokens;
+}
+
+function VarianceNote({ color, amount, text, tokens }: VarianceNoteProps) {
+  return (
+    <View style={styles.noteRow}>
+      <Text style={[styles.noteAmount, { color }]}>{amount}</Text>
+      <Text style={[styles.noteText, { color: tokens.textSoft }]}>{text}</Text>
+    </View>
   );
 }
 
@@ -615,20 +735,39 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 2,
   },
-  overpayBanner: {
+  heroTerms: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 8,
+  },
+  chainBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 11,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderRadius: 10,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
+    gap: 9,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
   },
-  overpayText: {
-    fontSize: 12.5,
+  chainText: {
+    flex: 1,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#FFFFFF',
+  },
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    paddingVertical: 3,
+  },
+  noteAmount: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  noteText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   sectionLabel: {
     fontSize: 12,
@@ -763,9 +902,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 1,
   },
-  historyPartialAmount: {
-    fontSize: 12.5,
-    fontWeight: '700',
+  historyRight: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  historyVariance: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  bottomStack: {
+    gap: 10,
   },
   bottomActions: {
     flexDirection: 'row',

@@ -1,14 +1,21 @@
 import type { DailyEntry, DailyEntryStatus } from '@lendledger/core';
-import { formatISODateLocal, type ISODateString } from '@lendledger/core';
+import {
+  deriveEntryDisplayStatus,
+  formatISODateLocal,
+  summarizeVariance,
+  type ISODateString,
+} from '@lendledger/core';
 
+import type { LoanStatusLabel } from '../components/ui/StatusPill';
 import { computeLoanOutstanding, computeLoanProgress } from './loanSummary';
 
-export type EntryFilter = 'All' | 'Paid' | 'Unpaid' | 'Partial';
+export type EntryFilter = 'All' | 'Paid' | 'Unpaid' | 'Underpaid';
 
+/** "Underpaid" is the user-facing name for a part-paid day (stored as `partial`). */
 const FILTER_TO_STATUS: Record<Exclude<EntryFilter, 'All'>, DailyEntryStatus> = {
   Paid: 'paid',
   Unpaid: 'unpaid',
-  Partial: 'partial',
+  Underpaid: 'partial',
 };
 
 function sortEntriesNewestFirst(entries: DailyEntry[]): DailyEntry[] {
@@ -29,14 +36,20 @@ export function formatEntryDateShort(iso: ISODateString): string {
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-export function dailyStatusToPill(status: DailyEntryStatus): 'Paid' | 'Unpaid' | 'Partial' {
+/** Pill label from expected vs received, so overpaid days read differently to exact ones. */
+export function entryToPill(
+  entry: Pick<DailyEntry, 'expectedAmount' | 'receivedAmount'>,
+): LoanStatusLabel {
+  const status = deriveEntryDisplayStatus(entry);
   switch (status) {
     case 'paid':
       return 'Paid';
+    case 'overpaid':
+      return 'Overpaid';
+    case 'underpaid':
+      return 'Underpaid';
     case 'unpaid':
       return 'Unpaid';
-    case 'partial':
-      return 'Partial';
     default: {
       const _exhaustive: never = status;
       throw new Error(`Unhandled status: ${_exhaustive}`);
@@ -144,6 +157,7 @@ export function buildLoanDetailSummary(entries: DailyEntry[]) {
     collected: computeCollected(entries),
     overpaymentCredit: computeOverpaymentCredit(entries),
     unpaidDays: countUnpaidDays(entries),
+    variance: summarizeVariance(entries),
     logged,
     total,
     progressPct: total > 0 ? Math.round((logged / total) * 100) : 0,

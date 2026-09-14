@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildLoanDetailSummary,
   computeOverpaymentCredit,
+  entryToPill,
   filterHistoryEntries,
   resolveCurrentEntry,
   splitEntriesForDisplay,
@@ -46,6 +47,50 @@ describe('loanDetail', () => {
     expect(summary.outstanding).toBe(21);
     expect(summary.logged).toBe(2);
     expect(summary.unpaidDays).toBe(1);
+  });
+
+  it('summarises overpaid and underpaid days for the notes section', () => {
+    const withUnderpaid = [
+      ...entries,
+      {
+        id: '5',
+        loanId: 'l1',
+        entryDate: '2026-06-04',
+        expectedAmount: 21,
+        receivedAmount: 15,
+        status: 'partial' as const,
+      },
+    ];
+    const summary = buildLoanDetailSummary(withUnderpaid);
+    expect(summary.variance).toEqual({
+      overpaidTotal: 4,
+      underpaidTotal: 6,
+      overpaidDays: 1,
+      underpaidDays: 1,
+    });
+  });
+
+  it('labels each entry from expected vs received', () => {
+    expect(entryToPill({ expectedAmount: 21, receivedAmount: 21 })).toBe('Paid');
+    expect(entryToPill({ expectedAmount: 21, receivedAmount: 25 })).toBe('Overpaid');
+    expect(entryToPill({ expectedAmount: 21, receivedAmount: 15 })).toBe('Underpaid');
+    expect(entryToPill({ expectedAmount: 21, receivedAmount: 0 })).toBe('Unpaid');
+  });
+
+  it('filters Underpaid history from part-paid days', () => {
+    const withUnderpaid = [
+      ...entries,
+      {
+        id: '6',
+        loanId: 'l1',
+        entryDate: '2026-06-04',
+        expectedAmount: 21,
+        receivedAmount: 15,
+        status: 'partial' as const,
+      },
+    ];
+    const filtered = filterHistoryEntries(withUnderpaid, 'Underpaid', '2026-06-20');
+    expect(filtered.map((entry) => entry.entryDate)).toEqual(['2026-06-04']);
   });
 
   it('pins the exact today entry as current', () => {

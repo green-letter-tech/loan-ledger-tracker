@@ -2,6 +2,8 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import type { ISODateString } from '@lendledger/core';
+
 import type { CalculatorSnapshot } from '../types/calculator';
 
 export type TabParamList = {
@@ -19,6 +21,8 @@ export type RootStackParamList = {
   LoaneeForm: { loaneeId?: string };
   LoaneeDetail: { loaneeId: string };
   ExtendLoan: { loanId: string };
+  RefinanceLoan: { oldLoanId: string };
+  BulkUpdate: { entryDate?: ISODateString } | undefined;
   PrivacyPolicy: undefined;
 };
 
