@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useTheme } from '../hooks/useTheme';
+import { BulkUpdateScreen } from '../screens/BulkUpdateScreen';
 import { CreateLoanScreen } from '../screens/CreateLoanScreen';
 import { ExtendLoanScreen } from '../screens/ExtendLoanScreen';
 import { LoanDetailScreen } from '../screens/LoanDetailScreen';
@@ -56,6 +57,11 @@ export function RootNavigator({ onboarded }: RootNavigatorProps) {
       <Stack.Screen
         name="ExtendLoan"
         component={ExtendLoanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BulkUpdate"
+        component={BulkUpdateScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

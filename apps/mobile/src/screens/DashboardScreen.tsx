@@ -1,5 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { formatINR, type DashboardStats, type ThemeSetting } from '@lendledger/core';
+import {
+  formatINR,
+  roundMoney,
+  type DashboardStats,
+  type RecoverySplit,
+  type ThemeSetting,
+} from '@lendledger/core';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
@@ -16,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChartWeek } from '../components/charts/BarChartWeek';
 import { DonutChart } from '../components/charts/DonutChart';
 import { LineChartCollections } from '../components/charts/LineChartCollections';
+import { RecoveryCard } from '../components/RecoveryCard';
 import { Avatar, Card, Logo, PillButton, ProgressBar } from '../components/ui';
 import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
@@ -66,6 +73,22 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
     useCallback(() => {
       void loadDashboard();
     }, [loadDashboard]),
+  );
+
+  /** Totals are derived from the parts so the bars and captions always agree. */
+  const recovery = useMemo<RecoverySplit>(
+    () => ({
+      principal: roundMoney((stats?.principalRecovered ?? 0) + (stats?.principalOutstanding ?? 0)),
+      totalInterest: roundMoney(
+        (stats?.interestRecovered ?? 0) + (stats?.interestOutstanding ?? 0),
+      ),
+      principalRecovered: stats?.principalRecovered ?? 0,
+      interestRecovered: stats?.interestRecovered ?? 0,
+      principalOutstanding: stats?.principalOutstanding ?? 0,
+      interestOutstanding: stats?.interestOutstanding ?? 0,
+      overpaidExcess: 0,
+    }),
+    [stats],
   );
 
   const donutSlices = useMemo(() => {
@@ -200,26 +223,41 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
             />
           </View>
 
-          <View style={styles.quickActions}>
+          <View style={styles.quickActionStack}>
             <PillButton
               variant="primary"
               size="md"
               full
-              icon="calculator"
-              onPress={() => navigation.navigate('Calculator')}
-              style={styles.quickActionPrimary}
+              icon="checkmark-done"
+              onPress={() => navigation.navigate('BulkUpdate', {})}
             >
-              New calculation
+              Update today's collections
             </PillButton>
-            <PillButton
-              variant="outline"
-              size="md"
-              icon="add"
-              onPress={() => navigation.navigate('LoaneeForm', {})}
-            >
-              Loanee
-            </PillButton>
+            <View style={styles.quickActions}>
+              <PillButton
+                variant="outline"
+                size="md"
+                full
+                icon="calculator"
+                onPress={() => navigation.navigate('Calculator')}
+                style={styles.quickActionHalf}
+              >
+                Calculate
+              </PillButton>
+              <PillButton
+                variant="outline"
+                size="md"
+                full
+                icon="add"
+                onPress={() => navigation.navigate('LoaneeForm', {})}
+                style={styles.quickActionHalf}
+              >
+                Loanee
+              </PillButton>
+            </View>
           </View>
+
+          <RecoveryCard title="Recovery across active loans" split={recovery} />
 
           <Card pad={16}>
             <Text style={[styles.chartTitle, { color: tokens.text }]}>Outstanding by loanee</Text>
@@ -518,11 +556,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     marginTop: 10,
   },
+  quickActionStack: {
+    gap: 10,
+  },
   quickActions: {
     flexDirection: 'row',
     gap: 10,
   },
-  quickActionPrimary: {
+  quickActionHalf: {
     flex: 1,
   },
   chartTitle: {
