@@ -9,6 +9,7 @@ import {
   type DailyEntry,
   type Loan,
   type LoanChain,
+  type PaymentMode,
 } from '@lendledger/core';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,7 +17,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,15 +27,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BottomActionBar } from '../components/BottomActionBar';
 import { CloseLoanModal } from '../components/CloseLoanModal';
 import { CustomAmountSheet } from '../components/CustomAmountSheet';
+import { AnimatedModalPanel } from '../components/motion/AnimatedModalPanel';
+import { DetailEntrance } from '../components/motion/DetailEntrance';
+import { PaymentModePickerModal } from '../components/PaymentModePickerModal';
 import { RecoveryCard } from '../components/RecoveryCard';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Card, PillButton, StatusPill } from '../components/ui';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
 import { useRepository } from '../context/AppProvider';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
+import { syncOwnerReminders } from '../services/reminders';
+import type { ThemeTokens } from '../theme/tokens';
+import { showAlert } from '../utils/confirmAction';
+import { formatStartDateLabel } from '../utils/formatStartDate';
 import {
   buildLoanDetailSummary,
   currentEntrySectionLabel,
@@ -42,11 +54,9 @@ import {
   resolveCurrentEntry,
   type EntryFilter,
 } from '../utils/loanDetail';
-import { formatStartDateLabel } from '../utils/formatStartDate';
 import { formatTermsSummary } from '../utils/loanTerms';
 import { loanStatusToPill } from '../utils/loanStatusLabel';
-import { showAlert } from '../utils/confirmAction';
-import type { ThemeTokens } from '../theme/tokens';
+import { formatPaymentMode } from '../utils/paymentMode';
 
 const FILTER_OPTIONS: ReadonlyArray<{ label: EntryFilter; value: EntryFilter }> = [
   { label: 'All', value: 'All' },
@@ -58,6 +68,7 @@ const FILTER_OPTIONS: ReadonlyArray<{ label: EntryFilter; value: EntryFilter }> 
 export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'LoanDetail'>) {
   const { loanId } = route.params;
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
   const todayIso = useMemo(() => formatISODateLocal(new Date()), []);
 
@@ -68,12 +79,16 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
   const [loading, setLoading] = useState(true);
   const [savingDate, setSavingDate] = useState<string | null>(null);
   const [sheetEntry, setSheetEntry] = useState<DailyEntry | null>(null);
+  const [paidModeEntry, setPaidModeEntry] = useState<DailyEntry | null>(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showManageMenu, setShowManageMenu] = useState(false);
   const [closing, setClosing] = useState(false);
   const [chain, setChain] = useState<LoanChain>({ previous: null, next: null });
 
-  const loadLoan = useCallback(async () => {
-    setLoading(true);
+  const loadLoan = useCallback(async (options?: { quiet?: boolean }) => {
+    if (!options?.quiet) {
+      setLoading(true);
+    }
     try {
       const loanData = await repository.getLoan(loanId);
       if (!loanData) {
@@ -94,9 +109,14 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
       setEntries(entryList);
       setChain(loanChain);
     } finally {
-      setLoading(false);
+      if (!options?.quiet) {
+        setLoading(false);
+      }
     }
   }, [loanId, repository]);
+
+  const reloadQuiet = useCallback(() => loadLoan({ quiet: true }), [loadLoan]);
+  const { refreshing, onRefresh } = usePullToRefresh(reloadQuiet);
 
   useFocusEffect(
     useCallback(() => {
@@ -119,15 +139,25 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
   );
 
   const updateEntry = useCallback(
-    async (entryDate: string, receivedAmount: number) => {
+    async (
+      entryDate: string,
+      receivedAmount: number,
+      paymentMode?: PaymentMode | null,
+    ) => {
       setSavingDate(entryDate);
       try {
-        const updated = await repository.updateDailyEntry(loanId, entryDate, receivedAmount);
+        const updated = await repository.updateDailyEntry(
+          loanId,
+          entryDate,
+          receivedAmount,
+          paymentMode,
+        );
         setEntries((prevEntries) =>
           prevEntries.map((entry) =>
             entry.entryDate === updated.entryDate ? updated : entry,
           ),
         );
+        void syncOwnerReminders(repository).catch(() => undefined);
       } finally {
         setSavingDate(null);
       }
@@ -135,16 +165,25 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
     [loanId, repository],
   );
 
-  const handleMarkPaid = useCallback(
-    (entry: DailyEntry) => {
-      void updateEntry(entry.entryDate, entry.expectedAmount);
+  const handleMarkPaid = useCallback((entry: DailyEntry) => {
+    setPaidModeEntry(entry);
+  }, []);
+
+  const handleConfirmPaidMode = useCallback(
+    async (mode: PaymentMode) => {
+      if (!paidModeEntry) {
+        return;
+      }
+      const entry = paidModeEntry;
+      await updateEntry(entry.entryDate, entry.expectedAmount, mode);
+      setPaidModeEntry(null);
     },
-    [updateEntry],
+    [paidModeEntry, updateEntry],
   );
 
   const handleMarkUnpaid = useCallback(
     (entry: DailyEntry) => {
-      void updateEntry(entry.entryDate, 0);
+      void updateEntry(entry.entryDate, 0, null);
     },
     [updateEntry],
   );
@@ -169,7 +208,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <ActivityIndicator color={tokens.blue} style={styles.loader} />
       </SafeAreaView>
@@ -178,7 +217,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
 
   if (!loan) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.missingState}>
           <Text style={[styles.missingTitle, { color: tokens.text }]}>Loan not found</Text>
@@ -191,7 +230,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -212,10 +251,35 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
         <View style={styles.headerPill}>
           <StatusPill status={loanStatusToPill(loan.status)} />
         </View>
+        {isFinished ? null : (
+          <Pressable
+            onPress={() => setShowManageMenu(true)}
+            style={[
+              styles.backButton,
+              { backgroundColor: tokens.surface, borderColor: tokens.borderSoft },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Manage loan"
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={tokens.text} />
+          </Pressable>
+        )}
       </View>
 
       <ScrollView
+        onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              void onRefresh();
+            }}
+            tintColor={tokens.blue}
+            colors={[tokens.blue]}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <LinearGradient
@@ -224,6 +288,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
+          <DetailEntrance>
           <View style={styles.heroTop}>
             <View>
               <Text style={styles.heroLabel}>Principal</Text>
@@ -259,7 +324,7 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
               <Text style={styles.heroStatValue}>{formatINR(summary.collected)}</Text>
             </View>
           </View>
-
+          </DetailEntrance>
         </LinearGradient>
 
         {chain.next ? (
@@ -446,33 +511,23 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
         ) : null}
       </ScrollView>
 
-      {isFinished ? null : (
-        <BottomActionBar>
-          <View style={styles.bottomStack}>
-            <View style={styles.bottomActions}>
-              <PillButton
-                variant="outline"
-                full
-                onPress={() => navigation.navigate('ExtendLoan', { loanId: loan.id })}
-                style={styles.bottomButton}
-              >
-                Extend
-              </PillButton>
-              <PillButton
-                variant="outline"
-                full
-                onPress={() => navigation.navigate('RefinanceLoan', { oldLoanId: loan.id })}
-                style={styles.bottomButton}
-              >
-                Refinance
-              </PillButton>
-            </View>
-            <PillButton variant="danger" full onPress={() => setShowCloseModal(true)}>
-              Close loan
-            </PillButton>
-          </View>
-        </BottomActionBar>
-      )}
+      <ManageLoanMenu
+        visible={showManageMenu}
+        tokens={tokens}
+        onClose={() => setShowManageMenu(false)}
+        onExtend={() => {
+          setShowManageMenu(false);
+          navigation.navigate('ExtendLoan', { loanId: loan.id });
+        }}
+        onRefinance={() => {
+          setShowManageMenu(false);
+          navigation.navigate('RefinanceLoan', { oldLoanId: loan.id });
+        }}
+        onCloseLoan={() => {
+          setShowManageMenu(false);
+          setShowCloseModal(true);
+        }}
+      />
 
       <CloseLoanModal
         visible={showCloseModal}
@@ -482,19 +537,143 @@ export function LoanDetailScreen({ navigation, route }: RootStackScreenProps<'Lo
         onConfirm={() => void handleCloseLoan()}
       />
 
+      <PaymentModePickerModal
+        visible={paidModeEntry !== null}
+        amount={paidModeEntry?.expectedAmount ?? 0}
+        initialMode={paidModeEntry?.paymentMode ?? null}
+        busy={
+          paidModeEntry !== null && savingDate === paidModeEntry.entryDate
+        }
+        onCancel={() => setPaidModeEntry(null)}
+        onConfirm={(mode) => {
+          void handleConfirmPaidMode(mode);
+        }}
+      />
+
       <CustomAmountSheet
         visible={sheetEntry !== null}
         entryDate={sheetEntry?.entryDate ?? todayIso}
         expectedAmount={sheetEntry?.expectedAmount ?? loan.dailyExpected}
         initialAmount={sheetEntry?.receivedAmount ?? 0}
+        initialPaymentMode={sheetEntry?.paymentMode ?? null}
         onClose={() => setSheetEntry(null)}
-        onSave={(amount) => {
+        onSave={(amount, paymentMode) => {
           if (sheetEntry) {
-            void updateEntry(sheetEntry.entryDate, amount).then(() => setSheetEntry(null));
+            void updateEntry(sheetEntry.entryDate, amount, paymentMode).then(() =>
+              setSheetEntry(null),
+            );
           }
         }}
       />
     </SafeAreaView>
+  );
+}
+
+interface ManageLoanMenuProps {
+  visible: boolean;
+  tokens: ThemeTokens;
+  onClose: () => void;
+  onExtend: () => void;
+  onRefinance: () => void;
+  onCloseLoan: () => void;
+}
+
+function ManageLoanMenu({
+  visible,
+  tokens,
+  onClose,
+  onExtend,
+  onRefinance,
+  onCloseLoan,
+}: ManageLoanMenuProps) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={[styles.menuScrim, { backgroundColor: tokens.scrim }]} onPress={onClose}>
+        <AnimatedModalPanel visible={visible} variant="sheet" style={styles.menuPanel}>
+          <Pressable
+            style={[
+              styles.menuSheet,
+              { backgroundColor: tokens.bgElev, borderColor: tokens.borderSoft },
+            ]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <Text style={[styles.menuTitle, { color: tokens.textFaint }]}>Manage loan</Text>
+
+            <ManageMenuRow
+              icon="calendar-outline"
+              label="Extend"
+              hint="Add more days to this loan"
+              color={tokens.text}
+              tint={tokens.surface2}
+              onPress={onExtend}
+              tokens={tokens}
+            />
+            <ManageMenuRow
+              icon="swap-horizontal-outline"
+              label="Refinance"
+              hint="Start a new loan and settle this one"
+              color={tokens.text}
+              tint={tokens.surface2}
+              onPress={onRefinance}
+              tokens={tokens}
+            />
+            <ManageMenuRow
+              icon="close-circle-outline"
+              label="Close loan"
+              hint="Mark remaining balance as settled"
+              color={tokens.red}
+              tint={tokens.redTint}
+              onPress={onCloseLoan}
+              tokens={tokens}
+              last
+            />
+          </Pressable>
+        </AnimatedModalPanel>
+      </Pressable>
+    </Modal>
+  );
+}
+
+interface ManageMenuRowProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  hint: string;
+  color: string;
+  tint: string;
+  onPress: () => void;
+  tokens: ThemeTokens;
+  last?: boolean;
+}
+
+function ManageMenuRow({
+  icon,
+  label,
+  hint,
+  color,
+  tint,
+  onPress,
+  tokens,
+  last = false,
+}: ManageMenuRowProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.menuRow,
+        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tokens.borderSoft },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <View style={[styles.menuIconWrap, { backgroundColor: tint }]}>
+        <Ionicons name={icon} size={18} color={color} />
+      </View>
+      <View style={styles.menuCopy}>
+        <Text style={[styles.menuLabel, { color }]}>{label}</Text>
+        <Text style={[styles.menuHint, { color: tokens.textFaint }]}>{hint}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={tokens.textFaint} />
+    </Pressable>
   );
 }
 
@@ -508,6 +687,7 @@ interface HistoryDayRowProps {
 
 function HistoryDayRow({ entry, last, isFuture, onPress, tokens }: HistoryDayRowProps) {
   const isPartial = entry.status === 'partial';
+  const modeLabel = formatPaymentMode(entry.paymentMode);
   const pill = entryToPill(entry);
   const variance = entryVariance(entry);
   const iconBg = isFuture
@@ -553,6 +733,7 @@ function HistoryDayRow({ entry, last, isFuture, onPress, tokens }: HistoryDayRow
         <Text style={[styles.historyExpected, { color: tokens.textFaint }]}>
           Expected {formatINR(entry.expectedAmount)}
           {isPartial && !isFuture ? ` · paid ${formatINR(entry.receivedAmount)}` : ''}
+          {modeLabel && !isFuture ? ` · ${modeLabel}` : ''}
         </Text>
       </View>
       {isFuture ? (
@@ -629,7 +810,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -648,6 +829,56 @@ const styles = StyleSheet.create({
   headerPill: {
     marginLeft: 'auto',
   },
+  menuScrim: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 16,
+    paddingBottom: 28,
+  },
+  menuPanel: {
+    width: '100%',
+  },
+  menuSheet: {
+    borderRadius: 22,
+    borderWidth: 1,
+    overflow: 'hidden',
+    paddingTop: 18,
+    paddingBottom: 6,
+  },
+  menuTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+    paddingHorizontal: 18,
+    marginBottom: 8,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  menuIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  menuLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  menuHint: {
+    fontSize: 12.5,
+    marginTop: 2,
+  },
   loader: {
     marginTop: 40,
   },
@@ -664,7 +895,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 14,
   },
   hero: {
@@ -909,15 +1140,5 @@ const styles = StyleSheet.create({
   historyVariance: {
     fontSize: 12,
     fontWeight: '800',
-  },
-  bottomStack: {
-    gap: 10,
-  },
-  bottomActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  bottomButton: {
-    flex: 1,
   },
 });

@@ -1,4 +1,4 @@
-import { formatINR } from '@lendledger/core';
+import { formatINR, type PaymentMode } from '@lendledger/core';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -12,18 +12,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PillButton } from './ui/PillButton';
 import { useTheme } from '../hooks/useTheme';
 import { formatEntryDateShort } from '../utils/loanDetail';
 import type { ISODateString } from '@lendledger/core';
+import { AnimatedModalPanel } from './motion/AnimatedModalPanel';
+import { PaymentModeChips } from './PaymentModeChips';
+import { PillButton } from './ui/PillButton';
 
 interface CustomAmountSheetProps {
   visible: boolean;
   entryDate: ISODateString;
   expectedAmount: number;
   initialAmount: number;
+  initialPaymentMode?: PaymentMode | null;
   onClose: () => void;
-  onSave: (amount: number) => void;
+  onSave: (amount: number, paymentMode: PaymentMode | null) => void;
 }
 
 export function CustomAmountSheet({
@@ -31,18 +34,21 @@ export function CustomAmountSheet({
   entryDate,
   expectedAmount,
   initialAmount,
+  initialPaymentMode = null,
   onClose,
   onSave,
 }: CustomAmountSheetProps) {
   const { tokens } = useTheme();
   const insets = useSafeAreaInsets();
   const [amount, setAmount] = useState('');
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>('cash');
 
   useEffect(() => {
     if (visible) {
       setAmount(initialAmount > 0 ? String(initialAmount) : '');
+      setPaymentMode(initialPaymentMode ?? 'cash');
     }
-  }, [initialAmount, visible]);
+  }, [initialAmount, initialPaymentMode, visible]);
 
   const parsed = parseFloat(amount) || 0;
   const statusHint =
@@ -67,68 +73,77 @@ export function CustomAmountSheet({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.sheetWrap}
         >
-          <Pressable
-            style={[
-              styles.sheet,
-              {
-                backgroundColor: tokens.bgElev,
-                paddingBottom: Math.max(insets.bottom, 22),
-              },
-            ]}
-            onPress={(event) => event.stopPropagation()}
-          >
-            <View style={[styles.handle, { backgroundColor: tokens.border }]} />
-            <Text style={[styles.title, { color: tokens.text }]}>Custom amount</Text>
-            <Text style={[styles.subtitle, { color: tokens.textFaint }]}>
-              {formatEntryDateShort(entryDate)} · expected {formatINR(expectedAmount)}
-            </Text>
+          <AnimatedModalPanel visible={visible} variant="sheet">
+            <Pressable
+              style={[
+                styles.sheet,
+                {
+                  backgroundColor: tokens.bgElev,
+                  paddingBottom: Math.max(insets.bottom, 22),
+                },
+              ]}
+              onPress={(event) => event.stopPropagation()}
+            >
+              <View style={[styles.handle, { backgroundColor: tokens.border }]} />
+              <Text style={[styles.title, { color: tokens.text }]}>Custom amount</Text>
+              <Text style={[styles.subtitle, { color: tokens.textFaint }]}>
+                {formatEntryDateShort(entryDate)} · expected {formatINR(expectedAmount)}
+              </Text>
 
-            <View style={styles.amountRow}>
-              <Text style={[styles.currency, { color: tokens.textFaint }]}>₹</Text>
-              <TextInput
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0"
-                placeholderTextColor={tokens.textFaint}
-                keyboardType="decimal-pad"
-                autoFocus
-                style={[styles.amountInput, { color: tokens.text }]}
-              />
-            </View>
+              <View style={styles.amountRow}>
+                <Text style={[styles.currency, { color: tokens.textFaint }]}>₹</Text>
+                <TextInput
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="0"
+                  placeholderTextColor={tokens.textFaint}
+                  keyboardType="decimal-pad"
+                  autoFocus
+                  style={[styles.amountInput, { color: tokens.text }]}
+                />
+              </View>
 
-            <View style={styles.quickRow}>
-              {quickAmounts.map((value) => (
-                <Pressable
-                  key={value}
-                  onPress={() => setAmount(String(value))}
-                  style={[
-                    styles.quickChip,
-                    { backgroundColor: tokens.surface2, borderColor: tokens.borderSoft },
-                  ]}
+              <View style={styles.quickRow}>
+                {quickAmounts.map((value) => (
+                  <Pressable
+                    key={value}
+                    onPress={() => setAmount(String(value))}
+                    style={[
+                      styles.quickChip,
+                      { backgroundColor: tokens.surface2, borderColor: tokens.borderSoft },
+                    ]}
+                  >
+                    <Text style={[styles.quickChipText, { color: tokens.textSoft }]}>
+                      {formatINR(value)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              {parsed > 0 ? (
+                <View style={styles.modeBlock}>
+                  <Text style={[styles.modeLabel, { color: tokens.textFaint }]}>Payment mode</Text>
+                  <PaymentModeChips value={paymentMode} onChange={setPaymentMode} />
+                </View>
+              ) : null}
+
+              <Text style={[styles.statusHint, { color: statusColor }]}>{statusHint}</Text>
+
+              <View style={styles.actions}>
+                <PillButton variant="soft" full onPress={onClose} style={styles.actionButton}>
+                  Cancel
+                </PillButton>
+                <PillButton
+                  variant="primary"
+                  full
+                  onPress={() => onSave(parsed, parsed > 0 ? paymentMode : null)}
+                  style={styles.actionButton}
                 >
-                  <Text style={[styles.quickChipText, { color: tokens.textSoft }]}>
-                    {formatINR(value)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={[styles.statusHint, { color: statusColor }]}>{statusHint}</Text>
-
-            <View style={styles.actions}>
-              <PillButton variant="soft" full onPress={onClose} style={styles.actionButton}>
-                Cancel
-              </PillButton>
-              <PillButton
-                variant="primary"
-                full
-                onPress={() => onSave(parsed)}
-                style={styles.actionButton}
-              >
-                Save
-              </PillButton>
-            </View>
-          </Pressable>
+                  Save
+                </PillButton>
+              </View>
+            </Pressable>
+          </AnimatedModalPanel>
         </KeyboardAvoidingView>
       </Pressable>
     </Modal>
@@ -190,7 +205,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   quickChip: {
     paddingHorizontal: 15,
@@ -201,6 +216,16 @@ const styles = StyleSheet.create({
   quickChipText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  modeBlock: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  modeLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   statusHint: {
     fontSize: 13,

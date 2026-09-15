@@ -38,6 +38,7 @@ export type {
   LoanStatus,
   Loanee,
   OwnerSettings,
+  PaymentMode,
   RefinanceLoanInput,
   ReminderFrequency,
   ThemeSetting,

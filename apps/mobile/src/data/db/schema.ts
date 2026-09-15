@@ -5,7 +5,7 @@
 
 export const DB_NAME = 'lendledger.db';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export type LoanStatus = 'active' | 'extended' | 'closed' | 'refinanced';
 
@@ -81,4 +81,5 @@ export interface DailyEntryRow {
   expected_amount: number;
   received_amount: number;
   status: DailyEntryStatus;
+  payment_mode: string | null;
 }

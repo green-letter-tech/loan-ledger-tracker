@@ -19,9 +19,12 @@ import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
 import { getLoaneeInitials } from '../utils/loanee';
 import { loadActiveLoanCards, type ActiveLoanCard } from '../utils/dashboardLoans';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 export function ActiveLoansScreen({ navigation }: RootStackScreenProps<'ActiveLoans'>) {
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
   const [activeLoans, setActiveLoans] = useState<ActiveLoanCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +86,7 @@ export function ActiveLoansScreen({ navigation }: RootStackScreenProps<'ActiveLo
   );
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -113,6 +116,8 @@ export function ActiveLoansScreen({ navigation }: RootStackScreenProps<'ActiveLo
         </View>
       ) : (
         <FlatList
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
           data={activeLoans}
           keyExtractor={(item) => item.loan.id}
           renderItem={renderLoan}
@@ -171,7 +176,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 10,
   },
   loanRow: {

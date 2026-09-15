@@ -4,6 +4,7 @@ import {
   type BulkEntryUpdate,
   type DatedEntry,
   type EntryDisplayStatus,
+  type PaymentMode,
 } from '@lendledger/core';
 
 /**
@@ -100,12 +101,19 @@ export function hasInvalidRow(rows: ReadonlyArray<BulkRow>): boolean {
 }
 
 /** Only rows whose amount actually differs from what is stored. */
-export function diffRows(rows: ReadonlyArray<BulkRow>): BulkEntryUpdate[] {
+export function diffRows(
+  rows: ReadonlyArray<BulkRow>,
+  defaultPaymentMode: PaymentMode = 'cash',
+): BulkEntryUpdate[] {
   const updates: BulkEntryUpdate[] = [];
   for (const row of rows) {
     const amount = resolveAmount(row);
     if (!Number.isNaN(amount) && amount !== row.original) {
-      updates.push({ loanId: row.loanId, receivedAmount: amount });
+      updates.push({
+        loanId: row.loanId,
+        receivedAmount: amount,
+        paymentMode: amount > 0 ? defaultPaymentMode : null,
+      });
     }
   }
   return updates;

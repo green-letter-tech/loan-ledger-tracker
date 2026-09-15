@@ -15,6 +15,7 @@ describe('loanSummary', () => {
         expectedAmount: 21,
         receivedAmount: 21,
         status: 'paid',
+      paymentMode: null,
       },
       {
         id: '2',
@@ -23,6 +24,7 @@ describe('loanSummary', () => {
         expectedAmount: 21,
         receivedAmount: 10,
         status: 'partial',
+      paymentMode: null,
       },
       {
         id: '3',
@@ -31,6 +33,7 @@ describe('loanSummary', () => {
         expectedAmount: 21,
         receivedAmount: 0,
         status: 'unpaid',
+      paymentMode: null,
       },
     ]);
 
@@ -46,6 +49,7 @@ describe('loanSummary', () => {
         expectedAmount: 3,
         receivedAmount: 3,
         status: 'paid',
+      paymentMode: null,
       },
       {
         id: '2',
@@ -54,6 +58,7 @@ describe('loanSummary', () => {
         expectedAmount: 3,
         receivedAmount: 1,
         status: 'partial',
+      paymentMode: null,
       },
       {
         id: '3',
@@ -62,6 +67,7 @@ describe('loanSummary', () => {
         expectedAmount: 3,
         receivedAmount: 0,
         status: 'unpaid',
+      paymentMode: null,
       },
     ]);
 

@@ -40,6 +40,8 @@ import type { RootStackScreenProps } from '../navigation/types';
 import type { ThemeTokens } from '../theme/tokens';
 import { isValidISODate } from '../utils/formatStartDate';
 import { formatTermsSummary } from '../utils/loanTerms';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 export function RefinanceLoanScreen({
   navigation,
@@ -47,6 +49,7 @@ export function RefinanceLoanScreen({
 }: RootStackScreenProps<'RefinanceLoan'>) {
   const { oldLoanId } = route.params;
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
   const todayIso = useMemo(() => formatISODateLocal(new Date()), []);
 
@@ -208,7 +211,7 @@ export function RefinanceLoanScreen({
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <ActivityIndicator color={tokens.blue} style={styles.loader} />
       </SafeAreaView>
@@ -217,7 +220,7 @@ export function RefinanceLoanScreen({
 
   if (!oldLoan || !terms || !preview) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.missingState}>
           <Text style={[styles.missingTitle, { color: tokens.text }]}>Cannot refinance</Text>
@@ -240,7 +243,7 @@ export function RefinanceLoanScreen({
         : 'No cash changes hands';
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -264,6 +267,8 @@ export function RefinanceLoanScreen({
         keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
       >
         <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -455,7 +460,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingTop: 6,
-    paddingBottom: 14,
+    paddingBottom: 16,
   },
   backButton: {
     width: 42,
@@ -493,7 +498,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 20,
   },
   currentName: {

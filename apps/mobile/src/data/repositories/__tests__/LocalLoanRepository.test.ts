@@ -152,8 +152,30 @@ describe('LocalLoanRepository', () => {
     expect(loan.dailyExpected).toBe(21);
     const paid = await repo.updateDailyEntry(loan.id, '2026-06-06', 21);
     expect(paid.status).toBe('paid');
-    const partial = await repo.updateDailyEntry(loan.id, '2026-06-07', 10);
+    expect(paid.paymentMode).toBe('cash');
+    const partial = await repo.updateDailyEntry(loan.id, '2026-06-07', 10, 'upi');
     expect(partial.status).toBe('partial');
+    expect(partial.paymentMode).toBe('upi');
+    const unpaid = await repo.updateDailyEntry(loan.id, '2026-06-07', 0);
+    expect(unpaid.status).toBe('unpaid');
+    expect(unpaid.paymentMode).toBeNull();
+  });
+
+  it('counts overdue collection days before asOf', async () => {
+    repo = await createTestRepository();
+    const loanee = await repo.createLoanee({ name: 'Overdue Test' });
+    const loan = await repo.createLoan({
+      loaneeId: loanee.id,
+      principal: 100,
+      interestRate: 1,
+      ratePeriod: 'day',
+      duration: 5,
+      durationUnit: 'days',
+      startDate: '2026-06-06',
+    });
+    await repo.updateDailyEntry(loan.id, '2026-06-06', 21);
+    // 2026-06-07 and 2026-06-08 still short; 2026-06-09 is asOf so not overdue.
+    expect(await repo.countOverdueCollectionDays('2026-06-09')).toBe(2);
   });
 
   it('rejects createLoan for an unknown loanee', async () => {

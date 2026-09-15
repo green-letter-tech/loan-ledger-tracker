@@ -105,6 +105,8 @@ export interface CreateLoanInput {
   startDate: ISODateString;
 }
 
+export type PaymentMode = 'cash' | 'upi' | 'bank' | 'other';
+
 export interface DailyEntry {
   id: string;
   loanId: string;
@@ -112,6 +114,8 @@ export interface DailyEntry {
   expectedAmount: number;
   receivedAmount: number;
   status: DailyEntryStatus;
+  /** How the collection was received; null when unpaid / zero. */
+  paymentMode: PaymentMode | null;
 }
 
 export interface DonutSlice {
@@ -156,6 +160,7 @@ export interface DatedEntry {
 export interface BulkEntryUpdate {
   loanId: string;
   receivedAmount: number;
+  paymentMode?: PaymentMode | null;
 }
 
 export interface BulkUpdateResult {
@@ -194,6 +199,7 @@ export interface LoanRepository {
     loanId: string,
     entryDate: ISODateString,
     receivedAmount: number,
+    paymentMode?: PaymentMode | null,
   ): Promise<DailyEntry>;
 
   /** Collectable entries on one date across all running loans, ordered by loanee name. */
@@ -218,4 +224,10 @@ export interface LoanRepository {
   getLoanChain(loanId: string): Promise<LoanChain>;
 
   getDashboardStats(): Promise<DashboardStats>;
+
+  /**
+   * Count overdue collectable days (entry_date before asOf) where received < expected
+   * across running loans. Used for reminder copy.
+   */
+  countOverdueCollectionDays(asOf: ISODateString): Promise<number>;
 }

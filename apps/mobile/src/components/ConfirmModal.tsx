@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../hooks/useTheme';
+import { AnimatedModalPanel } from './motion/AnimatedModalPanel';
 import { PillButton } from './ui/PillButton';
 
 interface ConfirmModalProps {
@@ -40,35 +41,37 @@ export function ConfirmModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={[styles.scrim, { backgroundColor: tokens.scrim }]} onPress={onCancel}>
-        <Pressable
-          style={[styles.dialog, { backgroundColor: tokens.bgElev, borderColor: tokens.borderSoft }]}
-          onPress={(event) => event.stopPropagation()}
-        >
-          <View style={[styles.iconWrap, { backgroundColor: accentTint }]}>
-            <Ionicons name={icon} size={26} color={accent} />
-          </View>
+        <AnimatedModalPanel visible={visible}>
+          <Pressable
+            style={[styles.dialog, { backgroundColor: tokens.bgElev, borderColor: tokens.borderSoft }]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={[styles.iconWrap, { backgroundColor: accentTint }]}>
+              <Ionicons name={icon} size={26} color={accent} />
+            </View>
 
-          <Text style={[styles.title, { color: tokens.text }]}>{title}</Text>
-          <Text style={[styles.body, { color: tokens.textSoft }]}>{message}</Text>
+            <Text style={[styles.title, { color: tokens.text }]}>{title}</Text>
+            <Text style={[styles.body, { color: tokens.textSoft }]}>{message}</Text>
 
-          {warning ? (
-            <Text style={[styles.warning, { color: tokens.amber }]}>{warning}</Text>
-          ) : null}
+            {warning ? (
+              <Text style={[styles.warning, { color: tokens.amber }]}>{warning}</Text>
+            ) : null}
 
-          <View style={styles.actions}>
-            <PillButton
-              variant={destructive ? 'danger' : 'primary'}
-              full
-              disabled={busy}
-              onPress={onConfirm}
-            >
-              {busy ? 'Saving…' : confirmLabel}
-            </PillButton>
-            <PillButton variant="outline" full disabled={busy} onPress={onCancel}>
-              {cancelLabel}
-            </PillButton>
-          </View>
-        </Pressable>
+            <View style={styles.actions}>
+              <PillButton
+                variant={destructive ? 'danger' : 'primary'}
+                full
+                disabled={busy}
+                onPress={onConfirm}
+              >
+                {busy ? 'Saving…' : confirmLabel}
+              </PillButton>
+              <PillButton variant="outline" full disabled={busy} onPress={onCancel}>
+                {cancelLabel}
+              </PillButton>
+            </View>
+          </Pressable>
+        </AnimatedModalPanel>
       </Pressable>
     </Modal>
   );

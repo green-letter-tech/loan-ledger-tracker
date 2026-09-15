@@ -2,7 +2,7 @@
   "expo": {
     "name": "LendLedger",
     "slug": "lendledger",
-    "version": "1.2.0-dev",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.greenletter.lendledger",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "POST_NOTIFICATIONS"
       ],

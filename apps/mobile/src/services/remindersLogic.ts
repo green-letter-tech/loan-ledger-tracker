@@ -35,3 +35,14 @@ export function parseReminderTime24(time24: string): { hour: number; minute: num
 
   return { hour, minute };
 }
+
+export const DEFAULT_REMINDER_BODY = "Update today's collections in LendLedger";
+
+/** Notification body; overdueDays only refreshes when syncReminders runs (app open / save). */
+export function buildReminderBody(overdueDays: number): string {
+  if (!Number.isFinite(overdueDays) || overdueDays <= 0) {
+    return DEFAULT_REMINDER_BODY;
+  }
+  const count = Math.floor(overdueDays);
+  return `${count} unpaid day${count === 1 ? '' : 's'} need${count === 1 ? 's' : ''} attention — update collections`;
+}

@@ -61,6 +61,7 @@ function datedEntry(
       expectedAmount: expected,
       receivedAmount: received,
       status: received <= 0 ? 'unpaid' : received >= expected ? 'paid' : 'partial',
+      paymentMode: received > 0 ? 'cash' : null,
     },
   };
 }
@@ -127,15 +128,15 @@ describe('selection', () => {
     const rows = toggleSelectAll([row(), row({ loanId: 'l2' })], true);
     expect(rows.every((item) => item.checked)).toBe(true);
     expect(diffRows(rows)).toEqual([
-      { loanId: 'l1', receivedAmount: 10 },
-      { loanId: 'l2', receivedAmount: 10 },
+      { loanId: 'l1', receivedAmount: 10, paymentMode: 'cash' },
+      { loanId: 'l2', receivedAmount: 10, paymentMode: 'cash' },
     ]);
   });
 
   it('unselect all clears every row to zero', () => {
     const rows = toggleSelectAll([row({ checked: true, original: 10 })], false);
     expect(rows[0]).toMatchObject({ checked: false, amountText: '' });
-    expect(diffRows(rows)).toEqual([{ loanId: 'l1', receivedAmount: 0 }]);
+    expect(diffRows(rows)).toEqual([{ loanId: 'l1', receivedAmount: 0, paymentMode: null }]);
   });
 
   it('unchecking a row falls back to its recorded part payment', () => {
@@ -169,12 +170,12 @@ describe('validation and diff', () => {
 
   it('excludes invalid rows from the diff', () => {
     const rows = [row({ amountText: 'abc' }), row({ loanId: 'l2', amountText: '5' })];
-    expect(diffRows(rows)).toEqual([{ loanId: 'l2', receivedAmount: 5 }]);
+    expect(diffRows(rows)).toEqual([{ loanId: 'l2', receivedAmount: 5, paymentMode: 'cash' }]);
   });
 
   it('allows an amount above expected', () => {
     expect(diffRows([row({ amountText: '25' })])).toEqual([
-      { loanId: 'l1', receivedAmount: 25 },
+      { loanId: 'l1', receivedAmount: 25, paymentMode: 'cash' },
     ]);
   });
 

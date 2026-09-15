@@ -108,7 +108,14 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     await setUserVersion(db, 3);
   }
 
-  if (SCHEMA_VERSION > 3) {
+  if (current < 4) {
+    await db.execAsync(`
+      ALTER TABLE daily_entries ADD COLUMN payment_mode TEXT;
+    `);
+    await setUserVersion(db, 4);
+  }
+
+  if (SCHEMA_VERSION > 4) {
     throw new Error(`Database schema v${SCHEMA_VERSION} not implemented (at v${await getUserVersion(db)})`);
   }
 }

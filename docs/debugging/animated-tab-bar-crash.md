@@ -1,8 +1,8 @@
 # Animated Tab Bar Crash Investigation
 
 **Date:** September 14, 2026  
-**Status:** ⏸️ Attempt #1 rolled back (runtime crash) · Attempt #2 blocked by a **linker error — root-caused and fixed locally**, see [Attempt #2](#-attempt-2--xcode-linker-failure-solved) below  
-**Time Invested:** ~2.5 hours
+**Status:** ✅ Root-caused; Reanimated 4.3.1 and the animated dock now run successfully in an iOS Release build
+**Time Invested:** ~3 hours
 
 ## 🎯 Goal
 
@@ -31,7 +31,7 @@ Implement an Instagram-style animated tab bar that:
 
 ## 🔍 Root Cause Analysis
 
-### Primary Suspect: Version Mismatch
+### Initial dependency problem: version mismatch
 
 **Expo SDK 56.0.9** expects:
 - `react-native-reanimated@4.3.1` (we used 4.6.0)
@@ -39,7 +39,12 @@ Implement an Instagram-style animated tab bar that:
 
 The version mismatch caused:
 1. **Worklets dependency conflict** - `react-native-worklets@0.8.3` was incompatible with `reanimated@4.6.0` which expected `0.12.x`
-2. **Native module crash** - CocoaPods linked incompatible binary frameworks
+2. **Pod installation failure** - CocoaPods correctly rejected the incompatible pair
+
+This was a real setup error, but it was **not the cause of the later black-screen crash**. Before
+the crashing app was successfully built, `npx expo install --fix` had already replaced these with
+Reanimated 4.3.1 and Gesture Handler 2.31.x. The later runtime crash had a separate cause described
+under Attempt #2.
 
 ### Secondary Issues
 
@@ -255,16 +260,90 @@ Two other things worth knowing from this session:
 1. **Don't trust Expo CLI's linker output.** Read the `.xcactivitylog` (command above) — it took 2 minutes to get the real symbol list vs. an hour of guessing at "SwiftUICore".
 2. This blocker was **unrelated to Reanimated**. Reanimated 4.3.1 + worklets 0.8.3 pod-installed cleanly; the same failure would have hit *any* `pod install` followed by a Debug build. Attempt #2 can now proceed to the actual on-device test.
 
+### Runtime crash after the linker fix
+
+After forcing the Debug React Core artifact, the Debug build linked and installed successfully,
+but still exited immediately. The actual device crash report was retrieved with:
+
+```bash
+xcrun devicectl device info files \
+  --device <udid> \
+  --domain-type systemCrashLogs \
+  --filter "Name BEGINSWITH 'LendLedger'"
+
+xcrun devicectl device copy from \
+  --device <udid> \
+  --domain-type systemCrashLogs \
+  --source <latest-LendLedger.ips> \
+  --destination /tmp/LendLedger-latest.ips
+```
+
+It showed:
+
+```
+EXC_BAD_ACCESS (SIGSEGV)
+facebook::react::Props::Props()
+facebook::react::YogaStylableProps::YogaStylableProps(...)
+facebook::react::BaseViewProps::BaseViewProps(...)
+expo::ExpoViewProps::ExpoViewProps(...)
+AppContext.registerNativeViews()
+```
+
+This confirms another binary ABI mismatch during Fabric component registration—between the Debug
+React Core artifact and Expo's precompiled modules—not a JavaScript error and not a Reanimated
+function call. The same source and dependency set built in **Release**, launched successfully, and
+remained alive on the device:
+
+```bash
+npx expo run:ios --device <udid> --configuration Release
+xcrun devicectl device process launch \
+  --device <udid> \
+  --terminate-existing \
+  com.greenletter.lendledger
+```
+
+The process check returned a live `LendLedger` PID after launch. Therefore, for the current
+Expo 56 / React Native 0.85.3 toolchain, the dependable workaround is:
+
+> **Use Release configuration for physical-device builds. Do not use Debug until the precompiled
+> Expo/React Native artifact ABI issue is resolved upstream.**
+
+### Final implementation result
+
+The second implementation deliberately minimized native surface area:
+
+- `react-native-reanimated@4.3.1` installed via `npx expo install`
+- `react-native-worklets@0.8.3` selected by Expo
+- no Gesture Handler dependency (ordinary `ScrollView.onScroll` is sufficient)
+- no third-party blur dependency
+- a 92%-opaque themed surface supplies the requested slight transparency
+- scroll-direction decisions are tested independently of animation rendering
+
+Verification on September 14:
+
+```
+TypeScript:       passed
+Mobile tests:     79/79 passed
+Core tests:       64/64 passed
+Release build:    succeeded (0 errors)
+Device install:   succeeded
+Device launch:    process remained alive
+```
+
+The animated dock is installed on the test iPhone and the process remains stable. It is implemented
+to expand as a 94%-width rounded pill, collapse to a 72%-width icon-only pill after meaningful
+downward scrolling, and expand on upward scrolling or when switching tabs. Visual/interaction
+acceptance remains to be confirmed manually on the phone.
+
 ---
 
 ## 🎬 Conclusion
 
-The animated tab bar is **technically feasible** but requires:
-- Using exact Expo-compatible package versions
-- Incremental testing with native builds
-- More time investment (~4-6 hours with proper debugging)
+The animated tab bar is working. The important conclusions are:
 
-**Recommendation:** Defer to v1.3 or later when Expo SDK is more stable with Reanimated v4+.
-
-**Update (Attempt #2):** the linker blocker is understood and fixed (see above); it was an RN prebuilt-core
-tooling quirk, not an animation-library problem. The environment is now ready to test Reanimated 4.3.1 on device.
+1. Install native packages with `npx expo install`, not unconstrained `npm install`.
+2. The original black-screen failure was not proof that Reanimated was broken.
+3. This Expo 56 / RN 0.85.3 environment has a Debug prebuilt-framework ABI problem.
+4. Use Release builds on the physical iPhone for this branch.
+5. Keep the implementation to Reanimated plus built-in scroll events; avoid unnecessary native
+   dependencies until each one has been independently justified and tested.

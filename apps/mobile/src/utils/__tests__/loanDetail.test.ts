@@ -18,6 +18,7 @@ describe('loanDetail', () => {
       expectedAmount: 21,
       receivedAmount: 21,
       status: 'paid' as const,
+      paymentMode: null,
     },
     {
       id: '2',
@@ -26,6 +27,7 @@ describe('loanDetail', () => {
       expectedAmount: 21,
       receivedAmount: 25,
       status: 'paid' as const,
+      paymentMode: null,
     },
     {
       id: '3',
@@ -34,6 +36,7 @@ describe('loanDetail', () => {
       expectedAmount: 21,
       receivedAmount: 0,
       status: 'unpaid' as const,
+      paymentMode: null,
     },
   ];
 
@@ -59,6 +62,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 15,
         status: 'partial' as const,
+      paymentMode: null,
       },
     ];
     const summary = buildLoanDetailSummary(withUnderpaid);
@@ -87,6 +91,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 15,
         status: 'partial' as const,
+      paymentMode: null,
       },
     ];
     const filtered = filterHistoryEntries(withUnderpaid, 'Underpaid', '2026-06-20');
@@ -103,6 +108,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
     const split = splitEntriesForDisplay(allEntries, '2026-06-14');
@@ -124,6 +130,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
       {
         id: 'm2',
@@ -132,6 +139,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
 
@@ -154,6 +162,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 21,
         status: 'paid' as const,
+      paymentMode: null,
       },
       {
         id: 'next',
@@ -162,6 +171,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
     const current = resolveCurrentEntry(loanEntries, '2026-06-14');
@@ -180,6 +190,7 @@ describe('loanDetail', () => {
         expectedAmount: 21,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
     const filtered = filterHistoryEntries(unpaidEntries, 'Unpaid', '2026-06-20');
@@ -195,6 +206,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 500,
         status: 'paid' as const,
+      paymentMode: null,
       },
       {
         id: 'p2',
@@ -203,6 +215,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
       {
         id: 'p3',
@@ -211,6 +224,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
     const current = resolveCurrentEntry(monthly, '2026-06-14');
@@ -234,6 +248,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 500,
         status: 'paid' as const,
+      paymentMode: null,
       },
       {
         id: 'next',
@@ -242,6 +257,7 @@ describe('loanDetail', () => {
         expectedAmount: 500,
         receivedAmount: 0,
         status: 'unpaid' as const,
+      paymentMode: null,
       },
     ];
     const current = resolveCurrentEntry(loanEntries, '2026-06-14');

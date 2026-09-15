@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomActionBar } from '../components/BottomActionBar';
+import { DetailEntrance } from '../components/motion/DetailEntrance';
 import { Avatar, Card, PillButton, ProgressBar, StatusPill } from '../components/ui';
 import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
@@ -23,12 +24,15 @@ import { getLoaneeInitials } from '../utils/loanee';
 import { confirmDestructiveAction, showAlert } from '../utils/confirmAction';
 import { loanStatusToPill } from '../utils/loanStatusLabel';
 import { loadLoaneeDetail, type LoanWithSummary } from '../utils/loanSummary';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 const ACTIVE_STATUSES = ['running', 'extended'] as const;
 
 export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'LoaneeDetail'>) {
   const { loaneeId } = route.params;
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
 
   const [loanee, setLoanee] = useState<Loanee | null>(null);
@@ -107,7 +111,7 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <ActivityIndicator color={tokens.blue} style={styles.loader} />
       </SafeAreaView>
@@ -116,7 +120,7 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
 
   if (!loanee) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.missingState}>
           <Text style={[styles.missingTitle, { color: tokens.text }]}>Loanee not found</Text>
@@ -130,7 +134,7 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -160,10 +164,12 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
       </View>
 
       <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profileRow}>
+        <DetailEntrance style={styles.profileRow}>
           <Avatar initials={getLoaneeInitials(loanee.name)} size={68} hue={loanee.avatarHue} />
           <View style={styles.profileBody}>
             <Text style={[styles.profileName, { color: tokens.text }]}>{loanee.name}</Text>
@@ -174,7 +180,7 @@ export function LoaneeDetailScreen({ navigation, route }: RootStackScreenProps<'
               </Pressable>
             ) : null}
           </View>
-        </View>
+        </DetailEntrance>
 
         {loanee.notes ? (
           <Card pad={14}>
@@ -281,7 +287,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -326,7 +332,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 16,
   },
   profileRow: {

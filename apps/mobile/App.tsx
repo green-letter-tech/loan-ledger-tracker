@@ -5,12 +5,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type { LoanRepository, OwnerSettings } from '@lendledger/core';
 
 import { AppProvider } from './src/context/AppProvider';
+import { TabBarMotionProvider } from './src/context/TabBarMotionProvider';
 import { createLocalLoanRepository } from './src/data/repositories/LoanRepository';
 import { MobileShell } from './src/components/MobileShell';
 import { useTheme } from './src/hooks/useTheme';
+import { navigationRef } from './src/navigation/navigationRef';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { BootstrapScreen } from './src/screens/BootstrapScreen';
-import { initReminders, syncReminders } from './src/services/reminders';
+import { initReminders, syncOwnerReminders } from './src/services/reminders';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 import { darkTokens, lightTokens } from './src/theme/tokens';
 
@@ -52,7 +54,7 @@ export default function App() {
     createLocalLoanRepository()
       .then(async (repository) => {
         const settings = await repository.getSettings();
-        void syncReminders(settings).catch(() => {
+        void syncOwnerReminders(repository).catch(() => {
           // Non-fatal — reminders resync on next settings change.
         });
         setBootstrap({ status: 'ready', repository, settings });
@@ -98,9 +100,11 @@ function AppNavigation({ onboarded }: { onboarded: boolean }) {
 
   return (
     <MobileShell outerBackgroundColor={shellBackground}>
-      <NavigationContainer theme={navigationTheme}>
-        <RootNavigator onboarded={onboarded} />
-      </NavigationContainer>
+      <TabBarMotionProvider>
+        <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+          <RootNavigator onboarded={onboarded} />
+        </NavigationContainer>
+      </TabBarMotionProvider>
     </MobileShell>
   );
 }

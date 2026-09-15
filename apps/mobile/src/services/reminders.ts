@@ -1,13 +1,24 @@
-import type { OwnerSettings } from '@lendledger/core';
+import { formatISODateLocal, type LoanRepository, type OwnerSettings } from '@lendledger/core';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import { parseReminderTime24, resolveScheduledTimes } from './remindersLogic';
+import {
+  buildReminderBody,
+  DEFAULT_REMINDER_BODY,
+  parseReminderTime24,
+  resolveScheduledTimes,
+} from './remindersLogic';
 
-export { parseReminderTime24, resolveScheduledTimes } from './remindersLogic';
+export {
+  buildReminderBody,
+  DEFAULT_REMINDER_BODY,
+  parseReminderTime24,
+  resolveScheduledTimes,
+} from './remindersLogic';
 
 export const REMINDER_NOTIFICATION_TITLE = 'LendLedger';
-export const REMINDER_NOTIFICATION_BODY = "Update today's collections in LendLedger";
+/** @deprecated Prefer buildReminderBody(overdueDays) */
+export const REMINDER_NOTIFICATION_BODY = DEFAULT_REMINDER_BODY;
 
 const ANDROID_CHANNEL_ID = 'daily-reminders';
 
@@ -20,6 +31,10 @@ export type SyncRemindersResult = {
   scheduled: number;
   permissionDenied?: boolean;
   skipped?: boolean;
+};
+
+export type SyncRemindersOptions = {
+  overdueDays?: number;
 };
 
 let initialized = false;
@@ -74,7 +89,14 @@ export async function cancelAllReminders(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-export async function syncReminders(settings: ReminderSettings): Promise<SyncRemindersResult> {
+/**
+ * Reschedules local daily reminders.
+ * Body text only updates when this runs (no background JS on notification fire).
+ */
+export async function syncReminders(
+  settings: ReminderSettings,
+  options: SyncRemindersOptions = {},
+): Promise<SyncRemindersResult> {
   if (Platform.OS === 'web') {
     return { scheduled: 0, skipped: true };
   }
@@ -91,6 +113,7 @@ export async function syncReminders(settings: ReminderSettings): Promise<SyncRem
     return { scheduled: 0, permissionDenied: true };
   }
 
+  const body = buildReminderBody(options.overdueDays ?? 0);
   const times = resolveScheduledTimes(settings.reminderFrequency, settings.reminderTimes);
   let scheduled = 0;
 
@@ -103,7 +126,7 @@ export async function syncReminders(settings: ReminderSettings): Promise<SyncRem
     await Notifications.scheduleNotificationAsync({
       content: {
         title: REMINDER_NOTIFICATION_TITLE,
-        body: REMINDER_NOTIFICATION_BODY,
+        body,
         sound: 'default',
       },
       trigger: {
@@ -117,4 +140,22 @@ export async function syncReminders(settings: ReminderSettings): Promise<SyncRem
   }
 
   return { scheduled };
+}
+
+/** Loads settings + overdue count, then syncs reminder copy. */
+export async function syncOwnerReminders(
+  repository: LoanRepository,
+): Promise<SyncRemindersResult> {
+  const settings = await repository.getSettings();
+  const overdueDays = await repository.countOverdueCollectionDays(
+    formatISODateLocal(new Date()),
+  );
+  return syncReminders(
+    {
+      remindersEnabled: settings.remindersEnabled,
+      reminderFrequency: settings.reminderFrequency,
+      reminderTimes: settings.reminderTimes,
+    },
+    { overdueDays },
+  );
 }

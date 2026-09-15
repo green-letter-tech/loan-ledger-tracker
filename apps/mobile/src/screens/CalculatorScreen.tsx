@@ -18,9 +18,11 @@ import {
 } from '../components/create-loan/LoanTermsForm';
 import { TabScreenLayout } from '../components/TabScreenLayout';
 import { Card, PillButton } from '../components/ui';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
 import type { CalculatorSnapshot } from '../types/calculator';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
 
 const DEFAULT_TERMS: LoanTermsValue = {
   principal: '100',
@@ -32,6 +34,7 @@ const DEFAULT_TERMS: LoanTermsValue = {
 
 export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
   const { tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
 
   const [terms, setTerms] = useState<LoanTermsValue>(DEFAULT_TERMS);
   const durationUnit = terms.durationUnit;
@@ -85,6 +88,8 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
         <Card pad={18}>
@@ -155,7 +160,7 @@ export function CalculatorScreen({ navigation }: TabScreenProps<'Calculator'>) {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 14,
   },
   resultCard: {

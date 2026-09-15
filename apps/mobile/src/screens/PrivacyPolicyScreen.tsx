@@ -8,14 +8,19 @@ import {
 } from '../content/privacyPolicy';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 export function PrivacyPolicyScreen(_props: RootStackScreenProps<'PrivacyPolicy'>) {
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
       <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -41,7 +46,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 20,
   },
   updated: {

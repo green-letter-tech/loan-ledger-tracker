@@ -12,6 +12,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,7 +25,10 @@ import { DonutChart } from '../components/charts/DonutChart';
 import { LineChartCollections } from '../components/charts/LineChartCollections';
 import { RecoveryCard } from '../components/RecoveryCard';
 import { Avatar, Card, Logo, PillButton, ProgressBar } from '../components/ui';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
 import { useRepository } from '../context/AppProvider';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
 import {
@@ -39,6 +43,7 @@ const DONUT_COLORS = ['#3681D7', '#22A56A', '#E19B34', '#9B59B6', '#E74C3C', '#1
 export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
   const { resolvedTheme, tokens, setThemePreference } = useTheme();
   const repository = useRepository();
+  const { reportScroll } = useTabBarMotion();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeLoans, setActiveLoans] = useState<ActiveLoanCard[]>([]);
@@ -55,8 +60,10 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
     [],
   );
 
-  const loadDashboard = useCallback(async () => {
-    setLoading(true);
+  const loadDashboard = useCallback(async (options?: { quiet?: boolean }) => {
+    if (!options?.quiet) {
+      setLoading(true);
+    }
     try {
       const [dashboardStats, loanCards] = await Promise.all([
         repository.getDashboardStats(),
@@ -65,9 +72,14 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
       setStats(dashboardStats);
       setActiveLoans(loanCards);
     } finally {
-      setLoading(false);
+      if (!options?.quiet) {
+        setLoading(false);
+      }
     }
   }, [repository]);
+
+  const reloadQuiet = useCallback(() => loadDashboard({ quiet: true }), [loadDashboard]);
+  const { refreshing, onRefresh } = usePullToRefresh(reloadQuiet);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,6 +130,17 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
 
   const isEmpty = !loading && (stats?.activeCount ?? 0) === 0;
 
+  const refreshControl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={() => {
+        void onRefresh();
+      }}
+      tintColor={tokens.blue}
+      colors={[tokens.blue]}
+    />
+  );
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
@@ -158,30 +181,41 @@ export function DashboardScreen({ navigation }: TabScreenProps<'Home'>) {
       {loading ? (
         <ActivityIndicator color={tokens.blue} style={styles.loader} />
       ) : isEmpty ? (
-        <View style={styles.emptyWrap}>
-          <View
-            style={[
-              styles.emptyIcon,
-              { backgroundColor: tokens.blueTint, borderColor: tokens.borderSoft },
-            ]}
-          >
-            <Ionicons name="cash-outline" size={50} color={tokens.blue} />
+        <ScrollView
+          contentContainerStyle={styles.emptyScroll}
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
+          refreshControl={refreshControl}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.emptyWrap}>
+            <View
+              style={[
+                styles.emptyIcon,
+                { backgroundColor: tokens.blueTint, borderColor: tokens.borderSoft },
+              ]}
+            >
+              <Ionicons name="cash-outline" size={50} color={tokens.blue} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: tokens.text }]}>No loans yet</Text>
+            <Text style={[styles.emptySubtitle, { color: tokens.textSoft }]}>
+              Run a quick calculation to set up your first daily-repayment loan and start tracking
+              collections.
+            </Text>
+            <PillButton variant="primary" onPress={() => navigation.navigate('Calculator')}>
+              Open calculator
+            </PillButton>
+            <Pressable onPress={() => navigation.navigate('LoaneeForm', {})}>
+              <Text style={[styles.emptyLink, { color: tokens.blue }]}>+ Add a loanee first</Text>
+            </Pressable>
           </View>
-          <Text style={[styles.emptyTitle, { color: tokens.text }]}>No loans yet</Text>
-          <Text style={[styles.emptySubtitle, { color: tokens.textSoft }]}>
-            Run a quick calculation to set up your first daily-repayment loan and start tracking
-            collections.
-          </Text>
-          <PillButton variant="primary" onPress={() => navigation.navigate('Calculator')}>
-            Open calculator
-          </PillButton>
-          <Pressable onPress={() => navigation.navigate('LoaneeForm', {})}>
-            <Text style={[styles.emptyLink, { color: tokens.blue }]}>+ Add a loanee first</Text>
-          </Pressable>
-        </View>
+        </ScrollView>
       ) : stats ? (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
+          refreshControl={refreshControl}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.statGrid}>
@@ -484,6 +518,10 @@ const styles = StyleSheet.create({
   loader: {
     marginTop: 40,
   },
+  emptyScroll: {
+    flexGrow: 1,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
+  },
   emptyWrap: {
     flex: 1,
     alignItems: 'center',
@@ -520,7 +558,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 14,
   },
   statGrid: {

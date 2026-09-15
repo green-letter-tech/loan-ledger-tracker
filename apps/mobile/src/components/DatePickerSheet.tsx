@@ -9,6 +9,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../hooks/useTheme';
+import { AnimatedModalPanel } from './motion/AnimatedModalPanel';
 import { PillButton } from './ui';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -125,15 +126,16 @@ export function DatePickerSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={[styles.scrim, { backgroundColor: tokens.scrim }]} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.sheet,
-            { backgroundColor: tokens.bgElev, paddingBottom: Math.max(insets.bottom, 20) },
-          ]}
-          onPress={(event) => event.stopPropagation()}
-        >
-          <View style={[styles.handle, { backgroundColor: tokens.border }]} />
-          <Text style={[styles.title, { color: tokens.text }]}>{title}</Text>
+        <AnimatedModalPanel visible={visible} variant="sheet">
+          <Pressable
+            style={[
+              styles.sheet,
+              { backgroundColor: tokens.bgElev, paddingBottom: Math.max(insets.bottom, 20) },
+            ]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={[styles.handle, { backgroundColor: tokens.border }]} />
+            <Text style={[styles.title, { color: tokens.text }]}>{title}</Text>
 
           <View style={styles.navRow}>
             <Pressable
@@ -214,7 +216,8 @@ export function DatePickerSheet({
           <PillButton variant="soft" full onPress={onClose} style={styles.cancel}>
             Cancel
           </PillButton>
-        </Pressable>
+          </Pressable>
+        </AnimatedModalPanel>
       </Pressable>
     </Modal>
   );

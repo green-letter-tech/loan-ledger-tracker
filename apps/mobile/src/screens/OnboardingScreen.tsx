@@ -9,7 +9,7 @@ import { DEFAULT_REMINDER_TIMES } from '../constants/reminders';
 import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
-import { ensureNotificationPermissions, syncReminders } from '../services/reminders';
+import { ensureNotificationPermissions, syncOwnerReminders } from '../services/reminders';
 import { showAlert } from '../utils/confirmAction';
 import { OnboardingRemindersStep } from './onboarding/OnboardingRemindersStep';
 import { OnboardingWelcomeStep } from './onboarding/OnboardingWelcomeStep';
@@ -57,14 +57,14 @@ export function OnboardingScreen({ navigation }: RootStackScreenProps<'Onboardin
         }
       }
 
-      const settings = await repository.updateSettings({
+      await repository.updateSettings({
         remindersEnabled: effectiveRemindersEnabled,
         reminderFrequency: frequency,
         reminderTimes,
         onboarded: true,
       });
 
-      await syncReminders(settings);
+      await syncOwnerReminders(repository);
 
       navigation.dispatch(
         CommonActions.reset({

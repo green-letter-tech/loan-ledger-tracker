@@ -21,6 +21,7 @@ import {
   type LoanRepository,
   type Loanee,
   type OwnerSettings,
+  type PaymentMode,
   type RefinanceLoanInput,
   type UpdateLoaneeInput,
   type UpdateOwnerSettingsInput,
@@ -290,6 +291,7 @@ export class LocalLoanRepository implements LoanRepository {
     loanId: string,
     entryDate: string,
     receivedAmount: number,
+    paymentMode?: PaymentMode | null,
   ): Promise<DailyEntry> {
     if (!Number.isFinite(receivedAmount) || receivedAmount < 0) {
       throw new Error('Received amount must be a non-negative number');
@@ -307,7 +309,12 @@ export class LocalLoanRepository implements LoanRepository {
       throw new Error(`Daily entry not found for ${entryDate}`);
     }
 
-    await this.writeEntryAmount(row.id, row.expected_amount, receivedAmount);
+    await this.writeEntryAmount(
+      row.id,
+      row.expected_amount,
+      receivedAmount,
+      resolveStoredPaymentMode(receivedAmount, paymentMode, row.payment_mode),
+    );
 
     const updated = await this.db.getFirstAsync<DailyEntryRow>(
       'SELECT * FROM daily_entries WHERE id = ?',
@@ -321,11 +328,13 @@ export class LocalLoanRepository implements LoanRepository {
     entryId: string,
     expectedAmount: number,
     receivedAmount: number,
+    paymentMode: PaymentMode | null,
   ): Promise<void> {
     await this.db.runAsync(
-      'UPDATE daily_entries SET received_amount = ?, status = ? WHERE id = ?',
+      'UPDATE daily_entries SET received_amount = ?, status = ?, payment_mode = ? WHERE id = ?',
       receivedAmount,
       deriveDailyEntryStatus(expectedAmount, receivedAmount),
+      paymentMode,
       entryId,
     );
   }
@@ -381,8 +390,9 @@ export class LocalLoanRepository implements LoanRepository {
       id: string;
       loan_id: string;
       expected_amount: number;
+      payment_mode: string | null;
     }>(
-      `SELECT de.id, de.loan_id, de.expected_amount
+      `SELECT de.id, de.loan_id, de.expected_amount, de.payment_mode
        FROM daily_entries de
        JOIN loans l ON l.id = de.loan_id
        WHERE l.owner_id = ? AND l.status IN ${RUNNING_STATUSES} AND de.entry_date = ?`,
@@ -391,7 +401,12 @@ export class LocalLoanRepository implements LoanRepository {
     );
     const collectable = new Map(rows.map((row) => [row.loan_id, row]));
 
-    const applicable: Array<{ entryId: string; expected: number; received: number }> = [];
+    const applicable: Array<{
+      entryId: string;
+      expected: number;
+      received: number;
+      paymentMode: PaymentMode | null;
+    }> = [];
     const skipped: string[] = [];
     for (const update of updates) {
       const row = collectable.get(update.loanId);
@@ -403,12 +418,22 @@ export class LocalLoanRepository implements LoanRepository {
         entryId: row.id,
         expected: row.expected_amount,
         received: update.receivedAmount,
+        paymentMode: resolveStoredPaymentMode(
+          update.receivedAmount,
+          update.paymentMode,
+          row.payment_mode,
+        ),
       });
     }
 
     await this.db.withTransactionAsync(async () => {
       for (const item of applicable) {
-        await this.writeEntryAmount(item.entryId, item.expected, item.received);
+        await this.writeEntryAmount(
+          item.entryId,
+          item.expected,
+          item.received,
+          item.paymentMode,
+        );
       }
     });
 
@@ -616,6 +641,21 @@ export class LocalLoanRepository implements LoanRepository {
     };
   }
 
+  async countOverdueCollectionDays(asOf: string): Promise<number> {
+    const row = await this.db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count
+       FROM daily_entries de
+       JOIN loans l ON l.id = de.loan_id
+       WHERE l.owner_id = ?
+         AND l.status IN ${RUNNING_STATUSES}
+         AND de.entry_date < ?
+         AND de.received_amount < de.expected_amount`,
+      this.ownerId,
+      asOf,
+    );
+    return row?.count ?? 0;
+  }
+
   /**
    * Recovery per loan from aggregated totals. `computeRecoverySplit` only reads
    * the sums, so one aggregate row per loan gives the same answer as every entry.
@@ -785,5 +825,30 @@ function mapDailyEntry(row: DailyEntryRow): DailyEntry {
     expectedAmount: row.expected_amount,
     receivedAmount: row.received_amount,
     status: row.status,
+    paymentMode: parsePaymentMode(row.payment_mode),
   };
+}
+
+const PAYMENT_MODES: ReadonlySet<string> = new Set(['cash', 'upi', 'bank', 'other']);
+
+function parsePaymentMode(value: string | null | undefined): PaymentMode | null {
+  if (!value || !PAYMENT_MODES.has(value)) {
+    return null;
+  }
+  return value as PaymentMode;
+}
+
+/** Persist mode when money was received; clear when unpaid. */
+function resolveStoredPaymentMode(
+  receivedAmount: number,
+  requested: PaymentMode | null | undefined,
+  existing: string | null | undefined,
+): PaymentMode | null {
+  if (receivedAmount <= 0) {
+    return null;
+  }
+  if (requested !== undefined) {
+    return requested ?? 'cash';
+  }
+  return parsePaymentMode(existing) ?? 'cash';
 }

@@ -11,11 +11,13 @@ import { TabScreenLayout } from '../components/TabScreenLayout';
 import { Card, Logo, Toggle } from '../components/ui';
 import { REMINDER_FREQUENCY_OPTIONS } from '../constants/reminders';
 import { useRepository } from '../context/AppProvider';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { TabScreenProps } from '../navigation/types';
-import { ensureNotificationPermissions, syncReminders } from '../services/reminders';
+import { ensureNotificationPermissions, syncOwnerReminders } from '../services/reminders';
 import { showAlert } from '../utils/confirmAction';
 import type { ThemePreference } from '../theme/types';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
 
 const THEME_OPTIONS: ReadonlyArray<{ label: string; value: ThemePreference }> = [
   { label: 'Light', value: 'light' },
@@ -29,6 +31,7 @@ const SETTINGS_EXTRA_TIME = '09:00';
 export function SettingsScreen({ navigation }: TabScreenProps<'Settings'>) {
   const { tokens, themePreference, setThemePreference } = useTheme();
   const repository = useRepository();
+  const { reportScroll } = useTabBarMotion();
 
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [frequency, setFrequency] = useState<ReminderFrequency>('once_daily');
@@ -55,11 +58,7 @@ export function SettingsScreen({ navigation }: TabScreenProps<'Settings'>) {
 
   const syncReminderSchedule = useCallback(
     async (settings: Awaited<ReturnType<typeof repository.updateSettings>>) => {
-      const result = await syncReminders({
-        remindersEnabled: settings.remindersEnabled,
-        reminderFrequency: settings.reminderFrequency,
-        reminderTimes: settings.reminderTimes,
-      });
+      const result = await syncOwnerReminders(repository);
 
       if (result.permissionDenied) {
         const disabled = await repository.updateSettings({ remindersEnabled: false });
@@ -154,6 +153,8 @@ export function SettingsScreen({ navigation }: TabScreenProps<'Settings'>) {
     <TabScreenLayout title="Settings">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
         <SettingsSection label="Appearance">
@@ -346,7 +347,7 @@ function SettingRow({
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 22,
   },
   section: {

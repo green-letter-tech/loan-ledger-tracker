@@ -2,8 +2,9 @@ import { formatINR } from '@lendledger/core';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { PillButton } from './ui/PillButton';
 import { useTheme } from '../hooks/useTheme';
+import { AnimatedModalPanel } from './motion/AnimatedModalPanel';
+import { PillButton } from './ui/PillButton';
 
 interface CloseLoanModalProps {
   visible: boolean;
@@ -25,37 +26,39 @@ export function CloseLoanModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={[styles.scrim, { backgroundColor: tokens.scrim }]} onPress={onCancel}>
-        <Pressable
-          style={[
-            styles.dialog,
-            {
-              backgroundColor: tokens.bgElev,
-              borderColor: tokens.borderSoft,
-            },
-          ]}
-          onPress={(event) => event.stopPropagation()}
-        >
-          <View style={[styles.iconWrap, { backgroundColor: tokens.redTint }]}>
-            <Ionicons name="flag-outline" size={26} color={tokens.red} />
-          </View>
+        <AnimatedModalPanel visible={visible}>
+          <Pressable
+            style={[
+              styles.dialog,
+              {
+                backgroundColor: tokens.bgElev,
+                borderColor: tokens.borderSoft,
+              },
+            ]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={[styles.iconWrap, { backgroundColor: tokens.redTint }]}>
+              <Ionicons name="flag-outline" size={26} color={tokens.red} />
+            </View>
 
-          <Text style={[styles.title, { color: tokens.text }]}>Close this loan?</Text>
-          <Text style={[styles.body, { color: tokens.textSoft }]}>
-            <Text style={[styles.outstanding, { color: tokens.amber }]}>
-              {formatINR(outstanding)}
+            <Text style={[styles.title, { color: tokens.text }]}>Close this loan?</Text>
+            <Text style={[styles.body, { color: tokens.textSoft }]}>
+              <Text style={[styles.outstanding, { color: tokens.amber }]}>
+                {formatINR(outstanding)}
+              </Text>
+              {' is still outstanding. Closing will stop daily tracking and mark the balance as written off.'}
             </Text>
-            {' is still outstanding. Closing will stop daily tracking and mark the balance as written off.'}
-          </Text>
 
-          <View style={styles.actions}>
-            <PillButton variant="primary" full disabled={closing} onPress={onCancel}>
-              Keep loan open
-            </PillButton>
-            <PillButton variant="danger" full disabled={closing} onPress={onConfirm}>
-              {closing ? 'Closing…' : 'Close anyway'}
-            </PillButton>
-          </View>
-        </Pressable>
+            <View style={styles.actions}>
+              <PillButton variant="primary" full disabled={closing} onPress={onCancel}>
+                Keep loan open
+              </PillButton>
+              <PillButton variant="danger" full disabled={closing} onPress={onConfirm}>
+                {closing ? 'Closing…' : 'Close anyway'}
+              </PillButton>
+            </View>
+          </Pressable>
+        </AnimatedModalPanel>
       </Pressable>
     </Modal>
   );

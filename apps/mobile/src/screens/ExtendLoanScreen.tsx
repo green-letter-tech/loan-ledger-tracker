@@ -29,10 +29,13 @@ import type { RootStackScreenProps } from '../navigation/types';
 import { countPartialDays, countUnpaidDays } from '../utils/loanDetail';
 import { formatStartDateLabel } from '../utils/formatStartDate';
 import { showAlert } from '../utils/confirmAction';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'ExtendLoan'>) {
   const { loanId } = route.params;
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
 
   const [loan, setLoan] = useState<Loan | null>(null);
@@ -120,7 +123,7 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <ActivityIndicator color={tokens.blue} style={styles.loader} />
       </SafeAreaView>
@@ -129,7 +132,7 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
 
   if (!loan || loan.status === 'closed') {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
         <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.missingState}>
           <Text style={[styles.missingTitle, { color: tokens.text }]}>
@@ -151,7 +154,7 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
       : 0;
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -170,6 +173,8 @@ export function ExtendLoanScreen({ navigation, route }: RootStackScreenProps<'Ex
       </View>
 
       <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -390,7 +395,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -421,7 +426,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 16,
   },
   loaneeName: {

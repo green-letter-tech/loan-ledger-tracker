@@ -31,6 +31,8 @@ import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
 import { formatStartDateLabel, isValidISODate } from '../utils/formatStartDate';
 import { getLoaneeInitials } from '../utils/loanee';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 const RATE_LABELS: Record<RatePeriod, string> = {
   day: 'per day',
@@ -41,6 +43,7 @@ const RATE_LABELS: Record<RatePeriod, string> = {
 export function CreateLoanScreen({ navigation, route }: RootStackScreenProps<'CreateLoan'>) {
   const snapshot = route.params?.calculatorSnapshot;
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
 
   const scrollRef = useRef<ScrollView>(null);
@@ -173,7 +176,7 @@ export function CreateLoanScreen({ navigation, route }: RootStackScreenProps<'Cr
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -197,6 +200,8 @@ export function CreateLoanScreen({ navigation, route }: RootStackScreenProps<'Cr
         keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}
       >
         <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
           ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -409,7 +414,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 16,
     paddingTop: 6,
-    paddingBottom: 14,
+    paddingBottom: 16,
   },
   backButton: {
     width: 42,
@@ -427,7 +432,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 20,
   },
   searchWrap: {

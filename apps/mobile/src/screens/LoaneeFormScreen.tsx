@@ -19,11 +19,14 @@ import { useRepository } from '../context/AppProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
 import { getLoaneeInitials } from '../utils/loanee';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 
 export function LoaneeFormScreen({ navigation, route }: RootStackScreenProps<'LoaneeForm'>) {
   const editId = route.params?.loaneeId;
   const isEditing = Boolean(editId);
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
 
   const [name, setName] = useState('');
@@ -102,7 +105,7 @@ export function LoaneeFormScreen({ navigation, route }: RootStackScreenProps<'Lo
   const canSave = name.trim().length > 0 && !saving;
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -127,6 +130,8 @@ export function LoaneeFormScreen({ navigation, route }: RootStackScreenProps<'Lo
       ) : (
         <>
           <ScrollView
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -256,7 +261,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 18,
   },
   avatarWrap: {

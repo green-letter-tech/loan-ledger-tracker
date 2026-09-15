@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseReminderTime24, resolveScheduledTimes } from '../remindersLogic';
+import { buildReminderBody, parseReminderTime24, resolveScheduledTimes } from '../remindersLogic';
 
 describe('reminders service helpers', () => {
   it('maps frequency presets to scheduled times', () => {
@@ -20,5 +20,11 @@ describe('reminders service helpers', () => {
   it('rejects invalid reminder times', () => {
     expect(parseReminderTime24('25:00')).toBeNull();
     expect(parseReminderTime24('bad')).toBeNull();
+  });
+
+  it('builds overdue-aware reminder bodies', () => {
+    expect(buildReminderBody(0)).toBe("Update today's collections in LendLedger");
+    expect(buildReminderBody(1)).toBe('1 unpaid day needs attention — update collections');
+    expect(buildReminderBody(3)).toBe('3 unpaid days need attention — update collections');
   });
 });

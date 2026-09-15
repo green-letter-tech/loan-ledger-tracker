@@ -4,6 +4,7 @@ import {
   formatISODateLocal,
   type DatedEntry,
   type ISODateString,
+  type PaymentMode,
 } from '@lendledger/core';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -21,10 +22,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomActionBar } from '../components/BottomActionBar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { DatePickerSheet } from '../components/DatePickerSheet';
+import { PaymentModeChips } from '../components/PaymentModeChips';
 import { Card, PillButton } from '../components/ui';
+import { FLOATING_DOCK_CLEARANCE } from '../constants/floatingDock';
 import { useRepository } from '../context/AppProvider';
+import { useTabBarMotion } from '../context/TabBarMotionProvider';
 import { useTheme } from '../hooks/useTheme';
 import type { RootStackScreenProps } from '../navigation/types';
+import { syncOwnerReminders } from '../services/reminders';
 import type { ThemeTokens } from '../theme/tokens';
 import {
   describeSummary,
@@ -44,6 +49,7 @@ import { formatStartDateLabel } from '../utils/formatStartDate';
 
 export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'BulkUpdate'>) {
   const { resolvedTheme, tokens } = useTheme();
+  const { reportScroll } = useTabBarMotion();
   const repository = useRepository();
   const todayIso = useMemo(() => formatISODateLocal(new Date()), []);
 
@@ -59,6 +65,7 @@ export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'Bu
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingDate, setPendingDate] = useState<ISODateString | null>(null);
+  const [defaultPaymentMode, setDefaultPaymentMode] = useState<PaymentMode>('cash');
 
   const load = useCallback(
     async (date: ISODateString) => {
@@ -81,7 +88,10 @@ export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'Bu
     void load(entryDate);
   }, [load, entryDate]);
 
-  const updates = useMemo(() => diffRows(rows), [rows]);
+  const updates = useMemo(
+    () => diffRows(rows, defaultPaymentMode),
+    [defaultPaymentMode, rows],
+  );
   const invalid = useMemo(() => hasInvalidRow(rows), [rows]);
   const summary = useMemo(() => summarizeRows(rows), [rows]);
   const allChecked = rows.length > 0 && rows.every((row) => row.checked);
@@ -112,6 +122,7 @@ export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'Bu
     try {
       const result = await repository.bulkUpdateDailyEntries(entryDate, updates);
       setShowConfirm(false);
+      void syncOwnerReminders(repository).catch(() => undefined);
 
       const skippedNote =
         result.skipped.length > 0 ? ` · ${result.skipped.length} skipped` : '';
@@ -141,7 +152,7 @@ export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'Bu
   );
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.bg }]} edges={['top']}>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={styles.header}>
@@ -193,26 +204,39 @@ export function BulkUpdateScreen({ navigation, route }: RootStackScreenProps<'Bu
         </View>
       ) : (
         <FlatList
+          onScroll={(event) => reportScroll(event.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
           data={rows}
           keyExtractor={(row) => row.loanId}
           renderItem={renderRow}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
           ListHeaderComponent={
-            <Pressable
-              onPress={() => setRows((prev) => toggleSelectAll(prev, !allChecked))}
-              style={[
-                styles.selectAll,
-                { backgroundColor: tokens.surface, borderColor: tokens.borderSoft },
-              ]}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: allChecked }}
-            >
-              <Checkbox checked={allChecked} tokens={tokens} />
-              <Text style={[styles.selectAllText, { color: tokens.text }]}>
-                {allChecked ? 'Unselect all' : 'Select all as paid'}
-              </Text>
-            </Pressable>
+            <View style={styles.listHeader}>
+              <View style={styles.modeHeader}>
+                <Text style={[styles.modeLabel, { color: tokens.textFaint }]}>
+                  Default payment mode
+                </Text>
+                <PaymentModeChips
+                  value={defaultPaymentMode}
+                  onChange={setDefaultPaymentMode}
+                />
+              </View>
+              <Pressable
+                onPress={() => setRows((prev) => toggleSelectAll(prev, !allChecked))}
+                style={[
+                  styles.selectAll,
+                  { backgroundColor: tokens.surface, borderColor: tokens.borderSoft },
+                ]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: allChecked }}
+              >
+                <Checkbox checked={allChecked} tokens={tokens} />
+                <Text style={[styles.selectAllText, { color: tokens.text }]}>
+                  {allChecked ? 'Unselect all' : 'Select all as paid'}
+                </Text>
+              </Pressable>
+            </View>
           }
         />
       )}
@@ -363,7 +387,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 6,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
@@ -424,7 +448,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: FLOATING_DOCK_CLEARANCE,
     gap: 10,
   },
   selectAll: {
@@ -436,6 +460,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     marginBottom: 10,
+  },
+  listHeader: {
+    gap: 10,
+    marginBottom: 4,
+  },
+  modeHeader: {
+    gap: 8,
+    marginBottom: 2,
+  },
+  modeLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   selectAllText: {
     fontSize: 14.5,
