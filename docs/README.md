@@ -2,6 +2,20 @@
 
 This folder (plus `archive/` and `design/`) holds the full record of how LendLedger was built: the problem, the decisions, the plan, the design iterations, the release path. It is organised so the Medium series can be written straight from it after MVP1 ships.
 
+## Medium series (blog drafts)
+
+| Ep | Title | Repo draft | Medium paste-ready |
+|----|-------|-----------|---------------------|
+| **1** | **The brief that started it** | [`blog/episode-01-the-brief.md`](blog/episode-01-the-brief.md) | [`blog/episode-01-medium.md`](blog/episode-01-medium.md) |
+| **2** | **Spec & design** | [`blog/episode-02-spec-design.md`](blog/episode-02-spec-design.md) | [`blog/episode-02-medium.md`](blog/episode-02-medium.md) |
+| **3** | **Foundation** | [`blog/episode-03-foundation.md`](blog/episode-03-foundation.md) | [`blog/episode-03-medium.md`](blog/episode-03-medium.md) |
+| **4** | **Building the product** | [`blog/episode-04-building-the-product.md`](blog/episode-04-building-the-product.md) | [`blog/episode-04-medium.md`](blog/episode-04-medium.md) |
+| **5** | **Ship & polish to v1.2** | [`blog/episode-05-ship-polish.md`](blog/episode-05-ship-polish.md) | [`blog/episode-05-medium.md`](blog/episode-05-medium.md) |
+
+All five are drafted. **Status: needs images/screenshots before publish** — see [`blog/assets-needed.md`](blog/assets-needed.md) for the exact list per episode.
+
+Episode 1 assets already exist next to its draft: `01-north-star-math.png`, `02-scope-mvp1-vs-later.png`, `03-local-first-architecture.png`, `05-series-map.png`. Episodes 2–5 reference assets that still need to be made or captured.
+
 ## Reading order
 
 | # | Stage | Where | Blog angle |
@@ -21,6 +35,12 @@ This folder (plus `archive/` and `design/`) holds the full record of how LendLed
 ```
 docs/
 ├── README.md                      ← this index
+├── blog/
+│   ├── episode-01-the-brief.md    Medium Episode 1 (canonical draft)
+│   ├── 01-north-star-math.png
+│   ├── 02-scope-mvp1-vs-later.png
+│   ├── 03-local-first-architecture.png
+│   └── 05-series-map.png
 ├── superpowers/
 │   ├── specs/     2026-05-25-lendledger-design.md      product + technical spec
 │   ├── plans/     2026-06-06-lendledger-mvp1.md        24-task plan, progress table, feedback log
