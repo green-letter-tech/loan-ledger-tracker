@@ -1,61 +1,124 @@
-# Assets needed before publishing Episodes 2–5
+# Visual assets for Episodes 1–5
 
-Episode 1 already has its 4 diagrams (`01-north-star-math.png` etc.) sitting in `docs/blog/`. Nothing else in the series has images yet — every `[IMAGE NEEDED — …]` / `[SCREENSHOT NEEDED — …]` marker below is a gap in the draft files (`episode-0X-*.md`).
+Naming convention: `epN-XX-description.png`, where `N` is the episode and `XX` is the order in which the visual appears.
 
-Two kinds of asset, don't mix them up:
+## Generated or archived assets — ready
 
-- **Diagram** — explanatory graphic, same style as Episode 1's (a formula, a flow, a before/after). Doesn't require the real app; can be made in Figma/Excalidraw/Canva or generated.
-- **Screenshot (real app)** — an actual capture from the running LendLedger app (device or simulator), because the point is to prove the feature exists and looks like this.
+### Episode 1
 
-I checked the repo for existing captures first: `design/screenshots/*.png` and `archive/ui-handoff-v1/screenshots/*.png` exist but are **blank** (captured before the CDN-loaded React design handoff finished rendering — not usable). `archive/stitch-design-references/*.png` **are** real, usable Stitch AI screenshots — flagged below where they help.
+1. `ep1-01-north-star-math.png` — ₹100 at 1% per day for 50 days → ₹3/day.
+2. `ep1-02-scope-mvp1-vs-later.png` — must ship vs sounds cool.
+3. `ep1-03-local-first-architecture.png` — screens → repository → on-device SQLite.
+4. `ep1-04-series-map.png` — five-episode journey.
 
----
+### Episode 2
 
-## Episode 2 — Spec & design ✅ assets ready
+1. `ep2-01-stitch-loanees.png` — original AI-generated Stitch Loanees screen.
+2. `ep2-02-tokens-flow.png` — `tokens.css` → `theme/tokens.ts` → screens.
 
-| Asset | Path | Status |
-|---|---|---|
-| Stitch Loanees screen | `docs/blog/06-stitch-loanees.png` | Copied from archive |
-| Tokens flow diagram | `docs/blog/07-tokens-flow.png` | Generated (Ep1 style) |
+### Episode 3
 
-## Episode 3 — Foundation
+1. `ep3-01-test-first-flow.png` — write the ₹3/day test, watch it fail, make it pass.
+2. `ep3-02-repository-testing.png` — same repository seam on the phone and in SQLite integration tests.
 
-| Marker in draft | Type | What's needed |
-|---|---|---|
-| TDD flow (failing test → calculator → pass, ₹3/day) | Diagram | New. Same visual language as Episode 1's math image — three steps, canonical example highlighted. |
-| Repository/testing diagram (screens → LoanRepository → SQLite on device, and → in-memory test double in tests) | Diagram | New. Variant of Episode 1's architecture diagram with a second branch for the test shim. |
+### Episode 4
 
-## Episode 4 — Building the product
+1. `ep4-01-money-rules.png` — four product rules fixed before implementation.
+2. `ep4-02-remaining-principal-math.png` — ₹33.33 remaining-principal calculation.
+3. `ep4-03-refinance-settlement.png` — deduction, cash to hand, waived interest, linked loans.
 
-| Marker in draft | Type | What's needed |
-|---|---|---|
-| Decisions table (overpayment, recovery split, bulk defaults, refinance deduction) | Diagram | New. Can literally be a styled version of the markdown table already in the draft. |
-| ₹33.33 recovery-split math | Diagram | New. Same style as Episode 1's ₹100→₹3/day formula card. |
-| Refinance settlement breakdown | Diagram | New. Render the "Remaining principal / Arrears / Deduct / Cash to hand / Waived" block as a receipt-style card. |
-| Loan Detail with Recovery card + variance rows | **Real screenshot** | Capture from the app: open a loan with some paid/overpaid/underpaid days, recovery card visible. |
-| Bulk Update screen | **Real screenshot** | Capture from the app: a day with several loans due, a few rows checked/typed. |
+### Episode 5
 
-## Episode 5 — Ship & polish to v1.2
-
-| Marker in draft | Type | What's needed |
-|---|---|---|
-| Crash investigation timeline | Diagram | New. 4 steps: version mismatch → linker error → marker-file bug → Release-only workaround. |
-| Animated dock collapsing/expanding | **Real screenshot(s) or short clip** | Scroll down (dock collapses to pill) and scroll up / switch tabs (dock expands). Two stills or a short screen recording. |
-| Payment mode picker | **Real screenshot** | Open a payment entry, show the cash / UPI / bank picker. |
-| Search + sort on the loanee list | **Real screenshot** | Loanees screen with the search field populated and sort menu open. |
-| Overdue reminder notification | **Real screenshot** | Android notification shade showing the "N loans overdue" reminder text. |
+1. `ep5-01-crash-investigation.png` — version mismatch → linker red herring → marker-file bug → Release workaround.
 
 ---
 
-## Fastest path to publishing without waiting on new diagrams
+## Real app captures still needed
 
-If you want to publish sooner: the 4 real-app screenshots for Episodes 4–5 (loan detail, bulk update, dock, payment mode/search/notification) matter far more to a reader than the explanatory diagrams — a reader believes "this app exists and looks like this" from a screenshot much faster than from any illustration. Diagrams can be added or even skipped later; missing screenshots are the bigger publish blocker.
+Use fictional names, phone numbers, and amounts. Keep the same device frame and theme within each episode. Crop out status-bar details if they expose personal information.
 
-Minimum for a credible v1 publish of Ep4–5: **5 real screenshots** —
-1. Loan detail (recovery card + variance)
-2. Bulk update screen
-3. Dock collapsed vs expanded (can be one before/after image)
-4. Payment mode picker
-5. Overdue reminder notification (or search/sort — pick one)
+### Episode 4
 
-Everything else can ship as plain text with the diagram markers removed, or added in a later pass.
+#### `ep4-04-loan-detail-recovery.png`
+
+Open one active or extended loan and capture a single screen containing:
+
+- loanee name and loan status;
+- interest rate / term line;
+- Recovery card with **Principal recovered** and **Interest recovered**;
+- at least three visible history rows:
+  - one Paid;
+  - one Underpaid with a negative variance;
+  - one Overpaid with a positive variance;
+- no personal data from a real borrower.
+
+If the Recovery card and history rows do not fit together, take two captures named:
+
+- `ep4-04a-loan-detail-recovery.png`
+- `ep4-04b-payment-variance-rows.png`
+
+#### `ep4-05-bulk-update.png`
+
+Open **Update today's collections** and capture:
+
+- selected date visible;
+- summary such as `N loans due`;
+- at least four fictional loanees;
+- one checked / paid-in-full row;
+- one ₹0 / unpaid row;
+- one partial custom amount;
+- Submit button visible.
+
+### Episode 5
+
+#### `ep5-02-dock-expanded.png`
+
+Capture a scrollable main screen at the top:
+
+- animated dock fully expanded;
+- all tab labels visible;
+- populated app content above it.
+
+#### `ep5-03-dock-collapsed.png`
+
+Use the same screen, theme, and data after scrolling down:
+
+- dock collapsed into the narrower icon-only pill;
+- enough page content visible to make the scroll state clear.
+
+These two will be shown side by side.
+
+#### `ep5-04-payment-mode-picker.png`
+
+Open a payment entry and capture:
+
+- amount / payment context visible;
+- payment-mode picker open;
+- **Cash**, **UPI**, and **Bank Transfer** visible;
+- one option visibly selected.
+
+#### `ep5-05-loanee-search-sort.png`
+
+On the Loanees screen:
+
+- enter a fictional name fragment in Search;
+- keep filtered results visible;
+- open the sort control;
+- show **Name**, **Outstanding**, and **Active** options in the same frame.
+
+#### `ep5-06-overdue-notification.png`
+
+From an Android notification shade:
+
+- LendLedger app name or icon visible;
+- reminder text includes the number of overdue loans;
+- timestamp visible if clean;
+- unrelated notifications and personal information hidden or cropped.
+
+---
+
+## Publish status
+
+- Episodes 1–3: all planned visuals are ready.
+- Episode 4: three diagrams ready; two real app captures needed.
+- Episode 5: crash diagram ready; five real app captures needed.

@@ -21,7 +21,7 @@ The first thing written wasn't the calculator. It was its test — a case assert
 
 That test failed on purpose — there was no calculator function yet. Only once it failed for the right reason did the function get written to make it pass. This is the whole point of writing the test first when AI is doing a lot of the typing: I don't have to eyeball-check every line of generated arithmetic. I have to trust one test that encodes the north-star example from Episode 1. If that test is green, the app's most important number is provably right, not just probably right.
 
-[IMAGE NEEDED — diagram: failing test → calculator function written → test passes, ₹3/day highlighted]
+[UPLOAD IMAGE HERE: ep3-01-test-first-flow.png]
 
 The same package holds the less obvious math: calendar-aware durations. "30 days" and "1 month" are not the same thing starting from February 15th — a naive plus-one-month can quietly shortchange or overcharge a loan by a day or two, which is exactly the kind of bug a lender would notice and an app would never explain. The date logic computes real calendar dates for every entry, and it's tested the same way the calculator is: write the case that would expose the bug, then make it pass.
 
@@ -31,7 +31,7 @@ Decision: one seam, tested without ever opening a phone
 
 Episode 1 mentioned the LoanRepository interface — screens talk to it, not to the database directly. The part worth going deeper on here is how that seam got tested: a lightweight in-memory stand-in for the on-device database, running under plain Node, so the repository's 14 integration tests (create a loan, get 50 daily entries, extend it, close it) run in the test suite with no emulator, no device, no wait.
 
-[IMAGE NEEDED — diagram: Screens → LoanRepository → on-device SQLite, and → same interface → in-memory test double, in tests]
+[UPLOAD IMAGE HERE: ep3-02-repository-testing.png]
 
 That seam is also what makes the tests reliable: a helper spins up a fresh in-memory database per test, so 14 tests about loan creation don't share state and don't depend on run order. Cheap, fast, and — because it's the real repository code under test, not a mock — it catches real database bugs, not just wiring mistakes.
 
@@ -91,6 +91,6 @@ Next: Episode 4 — Building the product: what happened when the feature request
 Medium publish checklist
 
 1. Paste everything above this checklist into a new Medium story.
-2. Add images where marked [IMAGE NEEDED — ...]: a simple TDD flow diagram and a repository/testing diagram. Both can be plain box-and-arrow diagrams.
+2. Upload `ep3-01-test-first-flow.png` and `ep3-02-repository-testing.png` where marked.
 3. Title: use the first line as the Medium title.
 4. Tags: AI, Software Development, Testing, Mobile App Development, Engineering

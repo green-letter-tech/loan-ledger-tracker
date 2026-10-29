@@ -5,7 +5,7 @@ Series: how I built a real lending tracker, from a messy requirement to a shippa
 Read time: ~6 minutes
 Episode: 2 of 5
 
-New to this series? Start with Episode 1, "The brief that started it" — the ₹100 → ₹3/day example and the offline cash-lending owner this whole app is built around. This episode assumes you've met both.
+New to this series? Start with Episode 1, "How I built a shippable Android app from a messy requirement" — the ₹100 → ₹3/day example and the offline cash-lending owner this whole app is built around. This episode assumes you've met both.
 
 This series is brought to you with Green Letter Technologies (GLT) (https://greenletter.tech/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep2), a team that takes ideas from brief to shippable product, and Neuron Workflows (https://goneuron.io/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep2), their no-code AI automation platform. More on both at the end.
 
@@ -17,7 +17,7 @@ Round one: letting AI draw the app
 
 The fastest way to see an app before building it is to describe it to an AI design tool. I used Google Stitch with a detailed prompt — screens, tone, palette, ₹ formatting — and in minutes had eight full screens: dashboard, calculator, loanee list, loan detail.
 
-[UPLOAD IMAGE HERE: 06-stitch-loanees.png]
+[UPLOAD IMAGE HERE: ep2-01-stitch-loanees.png]
 
 They looked like an app. That was the problem — they looked like an app, not this one. Rounded cards, a blue-to-green gradient, icons that could belong to any budgeting tool on the store. Nothing was wrong exactly, but nothing was earned either. AI had pattern-matched "lending app" against every lending app it had seen, not against an owner who collects ₹3 a day in cash, face to face.
 
@@ -42,7 +42,7 @@ The actual design reference for LendLedger is a single interactive HTML file wit
 
 The format isn't the point. The point is that every color in every screen traces back to one file of design tokens. Card backgrounds, status colors, muted text on dark backgrounds — named tokens, not hex codes sprinkled through components. When the Expo app was built, those tokens were ported once into the app's theme file, and every screen reads from a shared theme hook instead of hard-coding a color.
 
-[UPLOAD IMAGE HERE: 07-tokens-flow.png]
+[UPLOAD IMAGE HERE: ep2-02-tokens-flow.png]
 
 That discipline paid for itself fast. Weeks later, testers found the "expected" bars in the weekly chart were invisible in one theme — same gray as the background. The fix wasn't hunting down every chart component; it was adding one new token and pointing the chart at it. One line, one file, both themes fixed at once. That's the whole argument for tokens over hex: bugs become one-line fixes instead of scavenger hunts.
 
@@ -90,7 +90,7 @@ Medium publish checklist
 
 1. Paste everything above this checklist into a new Medium story.
 2. Upload these two images where marked:
-   - `06-stitch-loanees.png`
-   - `07-tokens-flow.png`
+   - `ep2-01-stitch-loanees.png`
+   - `ep2-02-tokens-flow.png`
 3. Title: use the first line as the Medium title.
 4. Tags: AI, Software Development, Product Design, UI UX, Mobile App Development

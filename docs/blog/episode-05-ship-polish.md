@@ -1,4 +1,6 @@
-# Building LendLedger with AI, Episode 5: A three-hour crash, a working dock, and what "done" looks like on Android
+# Episode 5: The three-hour crash behind a twenty-minute animation
+
+> **Publication-ready copy:** [`episode-05-medium.md`](episode-05-medium.md). This file retains the technical source notes and embedded image references.
 
 *Series: how I built a real lending tracker, from a messy requirement to a shippable Android app (v1.2).*
 
@@ -25,7 +27,7 @@ The goal was small: an Instagram-style tab bar that collapses to a pill when you
 
 **First mistake, and the fast fix:** I'd installed those packages with plain `npm install` instead of `npx expo install`, which meant versions that didn't match what that Expo SDK release actually expects. `npx expo install --fix` corrected it. The app still crashed.
 
-**[IMAGE NEEDED — visual: crash investigation timeline, version mismatch → linker error → marker-file bug → Release workaround]**
+![Crash investigation: version mismatch, linker red herring, marker-file bug, Release workaround](ep5-01-crash-investigation.png)
 
 **Second problem, and the real one:** stripped down to just the animation library, with the versions Expo actually wants, the app now failed to even *build* — an Xcode linker error blaming a Swift framework that this project doesn't use anywhere. That error message was a red herring; the real list of missing symbols was buried inside Expo's truncated build log, and only showed up after reading the raw Xcode activity log directly, byte by byte.
 
@@ -47,10 +49,10 @@ With the dock finally stable, the rest of the release was the everyday-use pass 
 - **Smarter overdue reminders** — the notification now says *how many* loans are actually behind, instead of a generic "update your collections" nudge every evening whether anything was overdue or not.
 - The **animated dock** itself, once it stopped crashing.
 
-**[SCREENSHOT NEEDED (real app): dock collapsing/expanding — a short clip or two stills]**
-**[SCREENSHOT NEEDED (real app): payment mode picker on a payment entry]**
-**[SCREENSHOT NEEDED (real app): search + sort on the loanee list]**
-**[SCREENSHOT NEEDED (real app): an overdue reminder notification]**
+**[SCREENSHOTS NEEDED: `ep5-02-dock-expanded.png` + `ep5-03-dock-collapsed.png`]**
+**[SCREENSHOT NEEDED: `ep5-04-payment-mode-picker.png`]**
+**[SCREENSHOT NEEDED: `ep5-05-loanee-search-sort.png`]**
+**[SCREENSHOT NEEDED: `ep5-06-overdue-notification.png`]**
 
 That set of changes is what turned into version **1.2.0** — the version tagged, built, and packaged as the APK this whole series has been building toward.
 

@@ -1,4 +1,6 @@
-# Building LendLedger with AI, Episode 4: The money logic that couldn't afford to be roughly right
+# Episode 4: The money logic that could not afford to be “almost right”
+
+> **Publication-ready copy:** [`episode-04-medium.md`](episode-04-medium.md). This file retains the code-oriented source notes and embedded image references.
 
 *Series: how I built a real lending tracker, from a messy requirement to a shippable Android app (v1.2).*
 
@@ -30,7 +32,7 @@ With several files changing at once and an AI collaborator moving fast across al
 | Recording many loans' payments at once — what date? | Defaults to today. Backfilling a past day is allowed. Future dates are blocked. |
 | Rolling an old loan into a new one — what gets deducted? | Remaining principal *plus* unpaid arrears, shown as a breakdown, editable by the lender before confirming. |
 
-**[IMAGE NEEDED — visual: decisions table above, clean card layout]**
+![Four money rules fixed before any code](ep4-01-money-rules.png)
 
 None of these are hard to code once decided. They're easy to get subtly wrong if every screen that touches money re-derives the rule from scratch. Writing them down once turned four ambiguous questions into four fixed answers everyone — human and AI — built against.
 
@@ -44,7 +46,7 @@ The test that had to pass before anything else did: a ₹100 loan over 120 days,
 remaining principal = (100 / 150) × 50 = 33.33
 ```
 
-**[IMAGE NEEDED — visual: the ₹33.33 math, laid out like Episode 1's north-star formula]**
+![How ₹50 of remaining payments contains ₹33.33 of principal](ep4-02-remaining-principal-math.png)
 
 That number went into the test suite before the refinance screen existed, the same discipline as Episode 3's calculator test. If ₹33.33 is ever wrong, every refinance conversation between an owner and a borrower is wrong — so it's the one thing in this feature that gets checked by a machine every single time, not eyeballed.
 
@@ -75,9 +77,9 @@ Cash to hand to loanee                        ₹61.67
 Interest waived on old loan                   ₹6.67   (muted)
 ```
 
-**[IMAGE NEEDED — visual/screenshot: refinance settlement breakdown as above]**
-**[SCREENSHOT NEEDED (real app): Loan Detail with the Recovery card + variance rows]**
-**[SCREENSHOT NEEDED (real app): Bulk Update screen with a few rows checked]**
+![Refinance settlement: deduction, cash to hand, and waived interest](ep4-03-refinance-settlement.png)
+**[SCREENSHOT NEEDED: `ep4-04-loan-detail-recovery.png` — exact capture instructions in `assets-needed.md`]**
+**[SCREENSHOT NEEDED: `ep4-05-bulk-update.png` — exact capture instructions in `assets-needed.md`]**
 
 If the new loan is smaller than what's owed, the app doesn't hide it — it shows "Loanee owes ₹x, collect before starting" and lets the lender proceed anyway. That's their call to make, not the app's to block.
 

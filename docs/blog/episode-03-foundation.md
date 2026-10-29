@@ -33,7 +33,7 @@ it('computes canonical example: 100 INR, 1%/day, 50 days → ₹3/day', () => {
 
 That test failed on purpose — there was no `calculateLoan` yet. Only once it failed for the right reason did the function get written to make it pass. This is the whole point of writing the test first when AI is doing a lot of the typing: I don't have to eyeball-check every line of generated arithmetic. I have to trust one test that encodes the north-star example from Episode 1. If that test is green, the app's most important number is provably right, not just probably right.
 
-**[IMAGE NEEDED — diagram: failing test → calculator.ts written → test passes, ₹3/day highlighted]**
+![Test first: write the ₹3/day contract, watch it fail, then make it pass](ep3-01-test-first-flow.png)
 
 The same package holds the less obvious math: **calendar-aware durations**. "30 days" and "1 month" are not the same thing starting from February 15th — a naive `+1 month` can quietly shortchange or overcharge a loan by a day or two, which is exactly the kind of bug a lender would notice and an app would never explain. `dates.ts` computes real calendar dates for every entry, and it's tested the same way the calculator is: write the case that would expose the bug, then make it pass.
 
@@ -43,7 +43,7 @@ By the time the first screen existed, nine tests already covered the two things 
 
 Episode 1 mentioned the `LoanRepository` interface — screens talk to it, not to SQLite directly. The part worth going deeper on here is *how* that seam got tested: a lightweight in-memory shim of `expo-sqlite` that runs under plain Node, so the repository's 14 integration tests (create a loan, get 50 daily entries, extend it, close it) run in Vitest with no emulator, no device, no wait.
 
-**[IMAGE NEEDED — diagram: Screens → LoanRepository → LocalLoanRepository(SQLite) on device, and → same interface → Vitest node shim, in tests]**
+![One repository seam used on the phone and in fast SQLite integration tests](ep3-02-repository-testing.png)
 
 That seam is also what makes the next test suite possible: `createTestRepository()` spins up a fresh in-memory database per test, so 14 tests about loan creation don't share state and don't depend on run order. Cheap, fast, and — because it's the *real* repository code under test, not a mock — it catches real SQL bugs, not just wiring mistakes.
 

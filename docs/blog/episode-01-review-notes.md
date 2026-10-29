@@ -114,7 +114,7 @@ Optional one-liner after the list (honest timeline):
 
 **Do frame it as:** wishlist fluff next to login and cloud — cut without hurting the use case; money in the app is ₹ only.
 
-**Draft status:** Applied in final Episode 1 + Medium paste (`episode-01-the-brief.md`, `episode-01-medium.md`). Image `02-scope-mvp1-vs-later.png` may still say “Parked for later” in the artwork — update graphic if it contradicts “sounds cool / not needed.”
+**Draft status:** Applied in final Episode 1 + Medium paste (`episode-01-the-brief.md`, `episode-01-medium.md`). Image `ep1-02-scope-mvp1-vs-later.png` may still say “Parked for later” in the artwork — update graphic if it contradicts “sounds cool / not needed.”
 
 ---
 

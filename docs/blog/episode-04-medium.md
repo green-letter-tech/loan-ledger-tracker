@@ -1,27 +1,33 @@
-Building LendLedger with AI, Episode 4: The money logic that couldn't afford to be roughly right
+Episode 4: The money logic that could not afford to be “almost right”
 
 Series: how I built a real lending tracker, from a messy requirement to a shippable Android app (v1.2).
 
 Read time: ~7 minutes
 Episode: 4 of 5
 
-New here? Episode 1 has the brief and the north-star example. Episode 3 has the tested foundation this episode builds on. This one is the hardest features in the app.
+New here? Episode 1 introduced the friend, the ₹100 → ₹3/day example, and the local-first bet. Episode 3 ended with a tested foundation and the first lessons from real users. This chapter begins when those users started asking harder questions.
 
 This series is brought to you with Green Letter Technologies (GLT) (https://greenletter.tech/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep4) and Neuron Workflows (https://goneuron.io/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep4). More at the end.
 
 —
 
-MVP1 was feature-complete: 29 core tests, 39 mobile tests, six real fixes from the first week of use. Then real use kept going, and the requests stopped being about screens.
+By the end of Episode 3, LendLedger could calculate a loan, create its payment schedule, record collections, and survive a restart without losing anything. The first six usability problems were fixed. It was no longer a prototype.
+
+Then real use continued, and the questions changed.
 
 "What if someone pays more than they owe?"
 "I don't want to open thirty loans one at a time every evening — can I just do them all at once?"
 "This loanee wants a new loan. Can we just roll the old balance into it?"
 
-Three different questions. One shared problem: all three are money math that has to be exactly right, not roughly right. This episode is about building all three — payment variance, bulk update, and refinance — the way you have to build anything where being 99% correct is the same as being wrong.
+Three questions, but one shared risk: each answer changes somebody's money. A screen can be slightly awkward and still be useful. A financial rule cannot be slightly correct.
 
-Decision: write the rules down before writing a function
+These requests became the centre of v1.1: payment variance, bulk collection updates, recovery tracking, and refinance.
 
-With several files changing at once and an AI collaborator moving fast across all of them, the risk isn't that any one line of code is wrong — it's that the same rule gets interpreted two different ways in two different files. So before any code, the plan for this stretch opened with a table titled, plainly, "Decisions already made — do not re-open." A sample:
+The first decision: settle the rules before writing code
+
+AI could create the functions and screens quickly. That speed introduced a different risk: the same business rule could be interpreted one way in the calculation, another way in the database, and a third way in the UI.
+
+So the implementation plan opened with a deliberately blunt heading: “Decisions already made — do not re-open.”
 
 Someone pays more than expected? Informational only. Doesn't shorten the loan or reduce future dues — shown as a note, not applied.
 
@@ -31,33 +37,49 @@ Recording many loans' payments at once — what date? Defaults to today. Backfil
 
 Rolling an old loan into a new one — what gets deducted? Remaining principal plus unpaid arrears, shown as a breakdown, editable by the lender before confirming.
 
-[IMAGE NEEDED — visual: decisions table above, as a clean card layout]
+[UPLOAD IMAGE HERE: ep4-01-money-rules.png]
 
-None of these are hard to code once decided. They're easy to get subtly wrong if every screen that touches money re-derives the rule from scratch. Writing them down once turned four ambiguous questions into four fixed answers everyone — human and AI — built against.
+None of these rules is difficult to code after it has been decided. The difficult part is making the decision once and preventing every screen from inventing its own answer.
 
-The one number that had to be exactly right: ₹33.33
+Writing them down turned four ambiguous requests into one shared contract for me, the AI, the tests, and the interface.
 
-Refinance needed to answer: of a loan's remaining term, how much of what's left is principal versus interest the lender never has to collect? The rule is proportional: a loan's principal share of its total payments stays constant, so remaining principal equals principal-share times remaining expected payments.
+Choice 1: What does “recovered” actually mean?
+
+Episode 1 treated every collection as one payment. Real use introduced a more useful question: how much principal has come back, and how much interest has been earned?
+
+We chose a proportional split. If principal makes up two-thirds of the total amount due, two-thirds of every rupee collected counts as principal recovery. The remaining third counts as interest.
+
+That same ratio became important during refinance. The app needed to separate the principal still owed from future interest the lender would no longer collect.
 
 The test that had to pass before anything else did: a ₹100 loan over 120 days, 80 days already elapsed, nothing extended. Two-thirds of every payment is principal (₹100 of ₹150 total). Remaining expected payments across the last 40 days: ₹50. Two-thirds of that:
 
 remaining principal = (100 / 150) × 50 = 33.33
 
-[IMAGE NEEDED — visual: the ₹33.33 math, laid out like Episode 1's north-star formula]
+[UPLOAD IMAGE HERE: ep4-02-remaining-principal-math.png]
 
-That number went into the test suite before the refinance screen existed, the same discipline as Episode 3's calculator test. If ₹33.33 is ever wrong, every refinance conversation between an owner and a borrower is wrong — so it's the one thing in this feature that gets checked by a machine every single time, not eyeballed.
+That ₹33.33 went into the test suite before the refinance screen existed, following the same discipline as the ₹3/day example from Episode 1.
 
-Recording thirty payments without opening thirty screens
+If that number is wrong, the new loan begins with the wrong deduction. So the calculation is checked by a machine every time the tests run, not trusted to visual inspection.
 
-The bulk update screen exists because "mark today's collections" is an owner's most repeated action, and doing it one loan at a time doesn't match how they actually work — cash in hand, walking down a list.
+Choice 2: One loan at a time, or one collection session?
 
-The interesting constraint wasn't the math, it was the UI: a list that might hold 300+ rows, each with its own optional text input for a custom amount, that must not lose keyboard focus every time a checkbox above it toggles. The fix was mundane but easy to get wrong under pressure: keep each row's edit state in a lookup keyed by loan ID, not by its position in the list. Re-render the list all you want — a row's typing state is tied to that loan, not to row seven.
+The original flow was technically complete: open a loanee, open a loan, find the payment row, update it, go back, and repeat.
 
-Submitting shows a one-line confirmation — how many marked paid, overpaid, underpaid, unpaid — before writing anything, and the write itself is one database transaction: either every change lands, or none do.
+For one loan, that is fine. For thirty collections, it is the wrong workflow.
 
-Ending a loan by starting a new one
+The owner does not think, “I will manage loan number seven now.” They sit down with the day's cash and work through a list. The product needed to follow that routine.
 
-Refinance is the feature that most needed a name before it needed code. Close options considered and rejected:
+So we added Update today's collections: one screen showing every loan due on the selected date. A checked row means paid in full. An unchecked row can remain at ₹0 or accept a custom amount for an underpayment or overpayment.
+
+The screen also had to behave reliably with hundreds of rows. Each edit is stored against the loan's ID, not its position in the list. That sounds like an implementation detail, but it prevents a dangerous failure: typing an amount for one person and having it move to another row after the list refreshes.
+
+Before saving, the app summarises how many payments are paid, overpaid, underpaid, or unpaid. The database update is one transaction: every selected change is saved, or none is.
+
+Choice 3: Extend the old loan, or start a new one?
+
+Extend already changed the end date of the same loan. The new request was different: a loanee wanted another loan, but part of its value first had to settle what remained on the old one.
+
+That needed a name before it needed code.
 
 Top-up — wrong; a top-up adds money to a loan that's still running. This loan ends.
 Restructure — wrong; that's changing terms on the same loan, which is what Extend already does.
@@ -71,23 +93,33 @@ Deduct from new loan: ₹38.33 — editable
 Cash to hand to loanee: ₹61.67
 Interest waived on old loan: ₹6.67
 
-[IMAGE NEEDED — visual/screenshot: refinance settlement breakdown as above]
-[SCREENSHOT NEEDED (real app): Loan Detail with the recovery card and variance rows]
-[SCREENSHOT NEEDED (real app): Bulk Update screen with a few rows checked]
+[UPLOAD IMAGE HERE: ep4-03-refinance-settlement.png]
+[SCREENSHOT NEEDED: ep4-04-loan-detail-recovery.png]
+[SCREENSHOT NEEDED: ep4-05-bulk-update.png]
 
-If the new loan is smaller than what's owed, the app doesn't hide it — it shows "Loanee owes ₹x, collect before starting" and lets the lender proceed anyway. That's their call to make, not the app's to block.
+If the new loan is smaller than the deduction, the app does not hide the result. It says “Loanee owes ₹x — collect before starting” and asks for confirmation. The app explains the consequence; the lender makes the decision.
 
 The old loan doesn't disappear; it's marked refinanced, keeps its full history, and links forward to the new one. The new loan links back. Nothing is deleted, nothing is faked as "paid" — the old loan's remaining interest is explicitly recorded as waived, not silently erased.
 
-Staying honest about what wasn't checked
+What AI accelerated — and what it could not decide
 
-The plan for this stretch ends with a section most plans don't bother writing: "Not done." It says, plainly, that two planned review checkpoints — actually opening the app on a device or web preview to eyeball the new screens — didn't happen. Everything shipped was verified by code review and unit tests, not by human eyes on a running app.
+AI was excellent at turning fixed rules into pure functions, edge-case tests, database migrations, and repetitive UI states. It was much less useful when the product decision itself was unclear.
 
-That's not a flaw in the write-up. It's the point of writing it down: a plan that admits what it skipped is worth more than one that only ever looks finished on paper. It also became the literal to-do list for the smoke test pass that followed.
+Should overpayment reduce tomorrow's due? Is a new loan a top-up, an extension, or a refinance? Should the app block a negative cash-to-hand result?
+
+Those are not coding questions. They depend on how the owner runs the business.
+
+By the end of the work, 64 core tests and 75 mobile tests were green. But the implementation record still ended with a section called “Not done.” Two planned visual-review checkpoints had been skipped, so the new screens still needed human eyes on a real device.
+
+That note mattered. A plan that records what was not verified is more useful than one that only looks complete on paper. It became the first item in the polish and release work that followed.
 
 Takeaway
 
-Complex money features don't get safer because a human moves slower, and they don't get safer because AI moves faster. They get safer the same way every time: pin the ambiguous decisions in writing before any code touches them, write the one test for the number that must never be wrong, and write down — honestly — what still needs a real pair of eyes before you call it done.
+Complex money features do not become safer because a human writes them slowly, or because AI writes them quickly.
+
+They become safer when the business rule is fixed before the code, the critical number has a test, the database change is atomic, and the team is honest about what still needs to be checked.
+
+The ₹3/day example kept the original calculator honest. In this chapter, ₹33.33 did the same job for refinance.
 
 —
 
@@ -111,13 +143,13 @@ Follow GLT on LinkedIn (https://linkedin.com/company/green-letter-technologies) 
 
 —
 
-Next: Episode 5 — Ship & polish to v1.2: a three-hour crash investigation, a working animated dock, and what "done" looks like on Android.
+Next: Episode 5 — the last stretch from “the features work” to a build I could confidently put back in my friend's hands.
 
 —
 
 Medium publish checklist
 
 1. Paste everything above this checklist into a new Medium story.
-2. Add images where marked [IMAGE NEEDED — ...] and [SCREENSHOT NEEDED — ...]: the decisions table, the ₹33.33 math visual, the refinance breakdown, and two real screenshots from the current app (loan detail, bulk update).
+2. Upload the three `ep4-0X` diagrams where marked, then add the two real-app screenshots described in `assets-needed.md`.
 3. Title: use the first line as the Medium title.
 4. Tags: AI, Software Development, Fintech, Mobile App Development, Product Management

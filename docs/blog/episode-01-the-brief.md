@@ -1,17 +1,19 @@
-# Building LendLedger with AI, Episode 1: The brief that started it
+# Episode 1: How I built a shippable Android app from a messy requirement
 
 *Series: how I built a real lending tracker, from a messy requirement to a shippable Android app (v1.2).*
 
+**Author:** Deepesh Tomar  
 **Read time:** ~8 minutes  
-**Episode:** 1 of 5
+**Episode:** 1 of 5  
+**Status:** published (author-edited from draft) — see also [`episode-01-medium.md`](episode-01-medium.md)
 
 > **A quick shout-out before we begin.** This series is brought to you with [Green Letter Technologies (GLT)](https://greenletter.tech/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep1), a team that builds intelligent software and helps businesses go from idea to launch, whether that's a 2-week MVP sprint, an AI integration, or a full modernisation. GLT also just launched [Neuron Workflows](https://goneuron.io/?utm_source=medium&utm_medium=blog&utm_campaign=lendledger_ep1): a no-code, AI-native platform where you build automations on a drag-and-drop canvas. Keep it in mind as you read. Not every messy requirement needs a whole app.
 
 ---
 
-I come from data engineering: a few years of pipelines, warehouses, and making numbers trustworthy at scale. Mobile apps and product UI were not my day job.
+I come from data engineering background: a few years of pipelines, warehouses, and making numbers trustworthy at scale. Mobile apps and product UI were not my day job.
 
-Then a friend asked for help.
+Then a friend who runs a mom-and-pop shop in a Tier-3 city asked for help.
 
 They needed a small business lending tracker. Not a bank product, not a payment gateway — just something an owner could use while lending cash short-term, collecting on a fixed schedule (often daily, sometimes weekly or monthly), and escaping notebooks and spreadsheets. I was hesitant — this wasn't my stack. Still, with AI as a partner I was confident we could ship something useful for this specific use case.
 
@@ -24,7 +26,7 @@ The example that sealed the product in my head was simple:
 
 That's not "interest-only." That's flat interest: principal plus total interest, spread evenly across the term. So ₹100 + ₹50 interest = ₹150 total, which works out to ₹3/day.
 
-![Insert: 01-north-star-math.png — ₹100 for 50 days at 1%/day → ₹3 every day](01-north-star-math.png)
+![₹100 for 50 days at 1%/day → ₹3 every day](ep1-01-north-star-math.png)
 
 If that math is wrong, everything else in the app is wrong. So this number became our north star. (Weekly and monthly loans use the same idea: total due ÷ number of periods.)
 
@@ -49,7 +51,7 @@ That one sentence killed a lot of "default SaaS" features before they started.
 
 The first brief mixed product truth with a tech wishlist. Repayment tracking sat right next to Google login. A calculator sat next to multi-currency. Before writing a single line of code, we sorted every item into one of two piles: **must ship** or **sounds cool**.
 
-![Insert: 02-scope-mvp1-vs-later.png — must ship vs sounds cool](02-scope-mvp1-vs-later.png)
+![must ship vs sounds cool](ep1-02-scope-mvp1-vs-later.png)
 
 Notice the pattern on the right: login, cloud hosting, loanee alerts. They're all things a "real product" usually has, and none of them were needed by someone collecting cash face to face. Multi-currency was the same kind of fancy — the owner works in **rupees only**, so ₹ was enough. PDF export joined that pile later, for the same reason.
 
@@ -93,7 +95,7 @@ And because the ledger lives on the phone, **personal and financial data never l
 
 I still designed a seam: screens talk to a `LoanRepository` interface. Today it's SQLite. Later it can be Supabase without rewriting the product screens. That was the compromise between "ship now" and "don't paint ourselves into a corner."
 
-![Insert: 03-local-first-architecture.png — phone + LoanRepository + SQLite; Track B later](03-local-first-architecture.png)
+![phone + LoanRepository + SQLite; Track B later](ep1-03-local-first-architecture.png)
 
 ---
 
@@ -145,9 +147,9 @@ This episode is the "why." The next four are the "how."
 
 Over five posts, I'll walk through the whole journey from a friend's notebook to a shippable APK: how we cut scope and turned AI-generated screens into a buildable design, how we laid a foundation we could trust (tested math first), how the trickier product features came together, and what it actually took to ship and polish the app to v1.2. Each episode stands on its own, but read in order they show what building with AI really looks like: decide, cut, build, test, ship, repeat.
 
-![Insert: 05-series-map.png — five episodes from brief to v1.2](05-series-map.png)
+![Five episodes from brief to v1.2](ep1-04-series-map.png)
 
-I'll link each title in the table below as the episodes go live.
+I'll link each title below as the episodes go live.
 
 ## Series map
 
